@@ -17,12 +17,15 @@ local SaturnLib = {
     Flags = {},
     Themes = {
         Background = Color3.fromRGB(14, 14, 19),
+        BackgroundTransparency = 0.15,
         Sidebar = Color3.fromRGB(11, 11, 15),
-        Section = Color3.fromRGB(18, 18, 25),
-        Element = Color3.fromRGB(24, 24, 34),
-        ElementHover = Color3.fromRGB(32, 32, 44),
+        Section = Color3.fromRGB(16, 16, 22),
+        SectionTransparency = 0.35,
+        Element = Color3.fromRGB(22, 22, 30),
+        ElementTransparency = 0.35,
+        ElementHover = Color3.fromRGB(30, 30, 42),
         Border = Color3.fromRGB(255, 255, 255),
-        BorderTransparency = 0.92,
+        BorderTransparency = 0.88,
         Text = Color3.fromRGB(245, 245, 250),
         TextDim = Color3.fromRGB(140, 140, 155),
         Accent = Color3.fromRGB(255, 255, 255),
@@ -241,19 +244,20 @@ function SaturnLib:CreateWindow(config)
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = getGuiParent()
 
-    -- Window Frame
+    -- Window Frame (Unified Minimalist Glass Card)
     local Main = Instance.new("Frame")
     Main.Name = "MainWindow"
     Main.AnchorPoint = Vector2.new(0.5, 0.5)
     Main.Position = UDim2.new(0.5, 0, 0.5, 0)
     Main.Size = UDim2.new(0, SizeX, 0, SizeY)
     Main.BackgroundColor3 = SaturnLib.Themes.Background
+    Main.BackgroundTransparency = SaturnLib.Themes.BackgroundTransparency
     Main.BorderSizePixel = 0
-    Main.ClipsDescendants = true
+    Main.ClipsDescendants = false
     Main.Parent = ScreenGui
 
     local MainCorner = Instance.new("UICorner")
-    MainCorner.CornerRadius = UDim.new(0, 14)
+    MainCorner.CornerRadius = UDim.new(0, 16)
     MainCorner.Parent = Main
 
     local MainStroke = Instance.new("UIStroke")
@@ -263,11 +267,25 @@ function SaturnLib:CreateWindow(config)
     MainStroke.Thickness = 1
     MainStroke.Parent = Main
 
-    -- Left Sidebar (Navigation)
+    -- Smooth Lighting Blur (identical to Saturn Loader)
+    local Lighting = game:GetService("Lighting")
+    if Lighting:FindFirstChild("SaturnLibBlur") then
+        Lighting.SaturnLibBlur:Destroy()
+    end
+    local Blur = Instance.new("BlurEffect")
+    Blur.Name = "SaturnLibBlur"
+    Blur.Size = 0
+    Blur.Parent = Lighting
+
+    TweenService:Create(Blur, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        Size = 18
+    }):Play()
+
+    -- Left Sidebar (Navigation) — Transparent to let Main's rounded corners & stroke render seamlessly
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, 160, 1, 0)
-    Sidebar.BackgroundColor3 = SaturnLib.Themes.Sidebar
+    Sidebar.BackgroundTransparency = 1
     Sidebar.BorderSizePixel = 0
     Sidebar.Parent = Main
 
@@ -277,7 +295,7 @@ function SaturnLib:CreateWindow(config)
     SidebarBorder.Position = UDim2.new(1, 0, 0, 0)
     SidebarBorder.Size = UDim2.new(0, 1, 1, 0)
     SidebarBorder.BackgroundColor3 = SaturnLib.Themes.Border
-    SidebarBorder.BackgroundTransparency = SaturnLib.Themes.BorderTransparency
+    SidebarBorder.BackgroundTransparency = 0.92
     SidebarBorder.BorderSizePixel = 0
     SidebarBorder.Parent = Sidebar
 
@@ -348,12 +366,20 @@ function SaturnLib:CreateWindow(config)
     BottomBadge.Position = UDim2.new(0, 10, 1, -10)
     BottomBadge.Size = UDim2.new(1, -20, 0, 32)
     BottomBadge.BackgroundColor3 = SaturnLib.Themes.Element
+    BottomBadge.BackgroundTransparency = 0.45
     BottomBadge.BorderSizePixel = 0
     BottomBadge.Parent = Sidebar
 
     local BadgeCorner = Instance.new("UICorner")
     BadgeCorner.CornerRadius = UDim.new(0, 8)
     BadgeCorner.Parent = BottomBadge
+
+    local BadgeStroke = Instance.new("UIStroke")
+    BadgeStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    BadgeStroke.Color = SaturnLib.Themes.Border
+    BadgeStroke.Transparency = 0.92
+    BadgeStroke.Thickness = 1
+    BadgeStroke.Parent = BottomBadge
 
     local BadgeDot = Instance.new("Frame")
     BadgeDot.AnchorPoint = Vector2.new(0, 0.5)
@@ -456,14 +482,24 @@ function SaturnLib:CreateWindow(config)
             Main.Visible = true
             TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, SizeX, 0, SizeY),
-                BackgroundTransparency = 0
+                BackgroundTransparency = SaturnLib.Themes.BackgroundTransparency
             }):Play()
+            if Blur then
+                TweenService:Create(Blur, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    Size = 18
+                }):Play()
+            end
         else
             local t = TweenService:Create(Main, TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
                 Size = UDim2.new(0, SizeX, 0, 0),
                 BackgroundTransparency = 1
             })
             t:Play()
+            if Blur then
+                TweenService:Create(Blur, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+                    Size = 0
+                }):Play()
+            end
             t.Completed:Connect(function()
                 if not SaturnLib.IsOpen then
                     Main.Visible = false
@@ -475,8 +511,18 @@ function SaturnLib:CreateWindow(config)
     local WindowObj = {
         ScreenGui = ScreenGui,
         Main = Main,
+        Blur = Blur,
         Tabs = {},
     }
+
+    function WindowObj:Destroy()
+        if Blur then
+            Blur:Destroy()
+        end
+        if ScreenGui then
+            ScreenGui:Destroy()
+        end
+    end
 
     -- Create Tab
     function WindowObj:CreateTab(tabConfig)
@@ -488,7 +534,8 @@ function SaturnLib:CreateWindow(config)
         local TabBtn = Instance.new("TextButton")
         TabBtn.Name = tabName .. "_Btn"
         TabBtn.Size = UDim2.new(1, 0, 0, 34)
-        TabBtn.BackgroundColor3 = SaturnLib.Themes.Sidebar
+        TabBtn.BackgroundColor3 = SaturnLib.Themes.Element
+        TabBtn.BackgroundTransparency = 1
         TabBtn.BorderSizePixel = 0
         TabBtn.AutoButtonColor = false
         TabBtn.Text = ""
@@ -497,6 +544,13 @@ function SaturnLib:CreateWindow(config)
         local TabCorner = Instance.new("UICorner")
         TabCorner.CornerRadius = UDim.new(0, 8)
         TabCorner.Parent = TabBtn
+
+        local TabStroke = Instance.new("UIStroke")
+        TabStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        TabStroke.Color = SaturnLib.Themes.Border
+        TabStroke.Transparency = 1
+        TabStroke.Thickness = 1
+        TabStroke.Parent = TabBtn
 
         local TabIndicator = Instance.new("Frame")
         TabIndicator.Name = "Indicator"
@@ -562,8 +616,14 @@ function SaturnLib:CreateWindow(config)
             for _, t in ipairs(WindowObj.Tabs) do
                 t.Page.Visible = false
                 TweenService:Create(t.Button, TweenInfo.new(0.15), {
-                    BackgroundColor3 = SaturnLib.Themes.Sidebar
+                    BackgroundTransparency = 1
                 }):Play()
+                local s = t.Button:FindFirstChildOfClass("UIStroke")
+                if s then
+                    TweenService:Create(s, TweenInfo.new(0.15), {
+                        Transparency = 1
+                    }):Play()
+                end
                 TweenService:Create(t.Button.Label, TweenInfo.new(0.15), {
                     TextColor3 = SaturnLib.Themes.TextDim
                 }):Play()
@@ -575,8 +635,13 @@ function SaturnLib:CreateWindow(config)
             TabPage.Visible = true
             CurrentTabLabel.Text = tabName:upper()
             TweenService:Create(TabBtn, TweenInfo.new(0.15), {
-                BackgroundColor3 = SaturnLib.Themes.Element
+                BackgroundTransparency = 0.4
             }):Play()
+            if TabStroke then
+                TweenService:Create(TabStroke, TweenInfo.new(0.15), {
+                    Transparency = 0.92
+                }):Play()
+            end
             TweenService:Create(TabLabel, TweenInfo.new(0.15), {
                 TextColor3 = SaturnLib.Themes.Text
             }):Play()
@@ -600,6 +665,7 @@ function SaturnLib:CreateWindow(config)
             SectionFrame.Name = (secTitle or "Section") .. "_Section"
             SectionFrame.Size = UDim2.new(1, 0, 0, 32)
             SectionFrame.BackgroundColor3 = SaturnLib.Themes.Section
+            SectionFrame.BackgroundTransparency = SaturnLib.Themes.SectionTransparency
             SectionFrame.BorderSizePixel = 0
             SectionFrame.Parent = TabPage
 
@@ -610,7 +676,7 @@ function SaturnLib:CreateWindow(config)
             local SecStroke = Instance.new("UIStroke")
             SecStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
             SecStroke.Color = SaturnLib.Themes.Border
-            SecStroke.Transparency = SaturnLib.Themes.BorderTransparency
+            SecStroke.Transparency = 0.90
             SecStroke.Parent = SectionFrame
 
             local SecHeader = Instance.new("Frame")
@@ -667,6 +733,7 @@ function SaturnLib:CreateWindow(config)
                 Item.Name = name .. "_Toggle"
                 Item.Size = UDim2.new(1, 0, 0, 34)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
+                Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
                 Item.AutoButtonColor = false
                 Item.Text = ""
@@ -675,6 +742,13 @@ function SaturnLib:CreateWindow(config)
                 local ItemCorner = Instance.new("UICorner")
                 ItemCorner.CornerRadius = UDim.new(0, 8)
                 ItemCorner.Parent = Item
+
+                local ItemStroke = Instance.new("UIStroke")
+                ItemStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                ItemStroke.Color = SaturnLib.Themes.Border
+                ItemStroke.Transparency = 0.93
+                ItemStroke.Thickness = 1
+                ItemStroke.Parent = Item
 
                 local Label = Instance.new("TextLabel")
                 Label.Position = UDim2.new(0, 12, 0, 0)
@@ -757,12 +831,20 @@ function SaturnLib:CreateWindow(config)
                 Item.Name = name .. "_Slider"
                 Item.Size = UDim2.new(1, 0, 0, 46)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
+                Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
                 Item.Parent = SecContainer
 
                 local ItemCorner = Instance.new("UICorner")
                 ItemCorner.CornerRadius = UDim.new(0, 8)
                 ItemCorner.Parent = Item
+
+                local ItemStroke = Instance.new("UIStroke")
+                ItemStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                ItemStroke.Color = SaturnLib.Themes.Border
+                ItemStroke.Transparency = 0.93
+                ItemStroke.Thickness = 1
+                ItemStroke.Parent = Item
 
                 local Label = Instance.new("TextLabel")
                 Label.Position = UDim2.new(0, 12, 0, 6)
@@ -879,6 +961,7 @@ function SaturnLib:CreateWindow(config)
                 Item.Name = name .. "_Dropdown"
                 Item.Size = UDim2.new(1, 0, 0, 36)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
+                Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
                 Item.ClipsDescendants = true
                 Item.Parent = SecContainer
@@ -886,6 +969,13 @@ function SaturnLib:CreateWindow(config)
                 local ItemCorner = Instance.new("UICorner")
                 ItemCorner.CornerRadius = UDim.new(0, 8)
                 ItemCorner.Parent = Item
+
+                local ItemStroke = Instance.new("UIStroke")
+                ItemStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                ItemStroke.Color = SaturnLib.Themes.Border
+                ItemStroke.Transparency = 0.93
+                ItemStroke.Thickness = 1
+                ItemStroke.Parent = Item
 
                 local HeaderBtn = Instance.new("TextButton")
                 HeaderBtn.Size = UDim2.new(1, 0, 0, 36)
@@ -1020,12 +1110,20 @@ function SaturnLib:CreateWindow(config)
                 Item.Name = name .. "_Keybind"
                 Item.Size = UDim2.new(1, 0, 0, 34)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
+                Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
                 Item.Parent = SecContainer
 
                 local ItemCorner = Instance.new("UICorner")
                 ItemCorner.CornerRadius = UDim.new(0, 8)
                 ItemCorner.Parent = Item
+
+                local ItemStroke = Instance.new("UIStroke")
+                ItemStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                ItemStroke.Color = SaturnLib.Themes.Border
+                ItemStroke.Transparency = 0.93
+                ItemStroke.Thickness = 1
+                ItemStroke.Parent = Item
 
                 local Label = Instance.new("TextLabel")
                 Label.Position = UDim2.new(0, 12, 0, 0)
@@ -1095,6 +1193,7 @@ function SaturnLib:CreateWindow(config)
                 Item.Name = name .. "_Button"
                 Item.Size = UDim2.new(1, 0, 0, 34)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
+                Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
                 Item.AutoButtonColor = false
                 Item.Font = getFont("Medium")
@@ -1106,6 +1205,13 @@ function SaturnLib:CreateWindow(config)
                 local ItemCorner = Instance.new("UICorner")
                 ItemCorner.CornerRadius = UDim.new(0, 8)
                 ItemCorner.Parent = Item
+
+                local ItemStroke = Instance.new("UIStroke")
+                ItemStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                ItemStroke.Color = SaturnLib.Themes.Border
+                ItemStroke.Transparency = 0.93
+                ItemStroke.Thickness = 1
+                ItemStroke.Parent = Item
 
                 Item.MouseEnter:Connect(function()
                     TweenService:Create(Item, TweenInfo.new(0.15), {
@@ -1141,12 +1247,20 @@ function SaturnLib:CreateWindow(config)
                 Item.Name = name .. "_ColorPicker"
                 Item.Size = UDim2.new(1, 0, 0, 34)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
+                Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
                 Item.Parent = SecContainer
 
                 local ItemCorner = Instance.new("UICorner")
                 ItemCorner.CornerRadius = UDim.new(0, 8)
                 ItemCorner.Parent = Item
+
+                local ItemStroke = Instance.new("UIStroke")
+                ItemStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                ItemStroke.Color = SaturnLib.Themes.Border
+                ItemStroke.Transparency = 0.93
+                ItemStroke.Thickness = 1
+                ItemStroke.Parent = Item
 
                 local Label = Instance.new("TextLabel")
                 Label.Position = UDim2.new(0, 12, 0, 0)
@@ -1217,12 +1331,20 @@ function SaturnLib:CreateWindow(config)
                 Item.Name = name .. "_TextBox"
                 Item.Size = UDim2.new(1, 0, 0, 36)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
+                Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
                 Item.Parent = SecContainer
 
                 local ItemCorner = Instance.new("UICorner")
                 ItemCorner.CornerRadius = UDim.new(0, 8)
                 ItemCorner.Parent = Item
+
+                local ItemStroke = Instance.new("UIStroke")
+                ItemStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                ItemStroke.Color = SaturnLib.Themes.Border
+                ItemStroke.Transparency = 0.93
+                ItemStroke.Thickness = 1
+                ItemStroke.Parent = Item
 
                 local Label = Instance.new("TextLabel")
                 Label.Position = UDim2.new(0, 12, 0, 0)
