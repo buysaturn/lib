@@ -267,18 +267,29 @@ function SaturnLib:CreateWindow(config)
     MainStroke.Thickness = 1
     MainStroke.Parent = Main
 
-    -- Smooth Lighting Blur (identical to Saturn Loader)
+    -- Deep Stacked Lighting Blur (multi-pass Gaussian)
     local Lighting = game:GetService("Lighting")
-    if Lighting:FindFirstChild("SaturnLibBlur") then
-        Lighting.SaturnLibBlur:Destroy()
+    for _, child in ipairs(Lighting:GetChildren()) do
+        if child.Name:find("SaturnLibBlur") then
+            child:Destroy()
+        end
     end
-    local Blur = Instance.new("BlurEffect")
-    Blur.Name = "SaturnLibBlur"
-    Blur.Size = 0
-    Blur.Parent = Lighting
 
-    TweenService:Create(Blur, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Size = 18
+    local Blur1 = Instance.new("BlurEffect")
+    Blur1.Name = "SaturnLibBlur_1"
+    Blur1.Size = 0
+    Blur1.Parent = Lighting
+
+    local Blur2 = Instance.new("BlurEffect")
+    Blur2.Name = "SaturnLibBlur_2"
+    Blur2.Size = 0
+    Blur2.Parent = Lighting
+
+    TweenService:Create(Blur1, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        Size = 24
+    }):Play()
+    TweenService:Create(Blur2, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        Size = 24
     }):Play()
 
     -- Left Sidebar (Navigation) — Transparent to let Main's rounded corners & stroke render seamlessly
@@ -427,30 +438,26 @@ function SaturnLib:CreateWindow(config)
     CurrentTabLabel.TextXAlignment = Enum.TextXAlignment.Left
     CurrentTabLabel.Parent = TopBar
 
-    -- Close Button
+    -- Close Button (Clean ASCII 'X' matching Saturn Loader)
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Name = "CloseBtn"
     CloseBtn.AnchorPoint = Vector2.new(1, 0.5)
-    CloseBtn.Position = UDim2.new(1, -14, 0.5, 0)
-    CloseBtn.Size = UDim2.new(0, 24, 0, 24)
-    CloseBtn.BackgroundColor3 = SaturnLib.Themes.Element
+    CloseBtn.Position = UDim2.new(1, -16, 0.5, 0)
+    CloseBtn.Size = UDim2.new(0, 26, 0, 26)
+    CloseBtn.BackgroundTransparency = 1
     CloseBtn.BorderSizePixel = 0
     CloseBtn.Font = getFont("Bold")
-    CloseBtn.Text = "×"
-    CloseBtn.TextColor3 = SaturnLib.Themes.TextDim
-    CloseBtn.TextSize = 16
+    CloseBtn.Text = "X"
+    CloseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
+    CloseBtn.TextSize = 13
     CloseBtn.AutoButtonColor = false
     CloseBtn.Parent = TopBar
 
-    local CloseCorner = Instance.new("UICorner")
-    CloseCorner.CornerRadius = UDim.new(0, 6)
-    CloseCorner.Parent = CloseBtn
-
     CloseBtn.MouseEnter:Connect(function()
-        CloseBtn.TextColor3 = Color3.fromRGB(255, 90, 90)
+        CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     end)
     CloseBtn.MouseLeave:Connect(function()
-        CloseBtn.TextColor3 = SaturnLib.Themes.TextDim
+        CloseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
     end)
     CloseBtn.MouseButton1Click:Connect(function()
         SaturnLib:Toggle(false)
@@ -484,9 +491,14 @@ function SaturnLib:CreateWindow(config)
                 Size = UDim2.new(0, SizeX, 0, SizeY),
                 BackgroundTransparency = SaturnLib.Themes.BackgroundTransparency
             }):Play()
-            if Blur then
-                TweenService:Create(Blur, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                    Size = 18
+            if Blur1 then
+                TweenService:Create(Blur1, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    Size = 24
+                }):Play()
+            end
+            if Blur2 then
+                TweenService:Create(Blur2, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    Size = 24
                 }):Play()
             end
         else
@@ -495,8 +507,13 @@ function SaturnLib:CreateWindow(config)
                 BackgroundTransparency = 1
             })
             t:Play()
-            if Blur then
-                TweenService:Create(Blur, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+            if Blur1 then
+                TweenService:Create(Blur1, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+                    Size = 0
+                }):Play()
+            end
+            if Blur2 then
+                TweenService:Create(Blur2, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
                     Size = 0
                 }):Play()
             end
@@ -511,13 +528,17 @@ function SaturnLib:CreateWindow(config)
     local WindowObj = {
         ScreenGui = ScreenGui,
         Main = Main,
-        Blur = Blur,
+        Blur1 = Blur1,
+        Blur2 = Blur2,
         Tabs = {},
     }
 
     function WindowObj:Destroy()
-        if Blur then
-            Blur:Destroy()
+        if Blur1 then
+            Blur1:Destroy()
+        end
+        if Blur2 then
+            Blur2:Destroy()
         end
         if ScreenGui then
             ScreenGui:Destroy()
