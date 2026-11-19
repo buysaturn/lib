@@ -839,15 +839,15 @@ function SaturnLib:CreateWindow(config)
         TabPage.Parent = ContentContainer
 
         local PagePadding = Instance.new("UIPadding")
-        PagePadding.PaddingTop = UDim.new(0, 6)
-        PagePadding.PaddingBottom = UDim.new(0, 14)
+        PagePadding.PaddingTop = UDim.new(0, 8)
+        PagePadding.PaddingBottom = UDim.new(0, 18)
         PagePadding.PaddingLeft = UDim.new(0, 16)
         PagePadding.PaddingRight = UDim.new(0, 16)
         PagePadding.Parent = TabPage
 
         local PageLayout = Instance.new("UIListLayout")
         PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        PageLayout.Padding = UDim.new(0, 10)
+        PageLayout.Padding = UDim.new(0, 18)
         PageLayout.Parent = TabPage
 
         PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -907,35 +907,24 @@ function SaturnLib:CreateWindow(config)
 
         table.insert(WindowObj.Tabs, TabObj)
 
-        -- Create Section
+        -- Create Section (flat list style: title + divider, rows without card blocks)
         function TabObj:CreateSection(secTitle)
             local SectionFrame = Instance.new("Frame")
             SectionFrame.Name = (secTitle or "Section") .. "_Section"
-            SectionFrame.Size = UDim2.new(1, 0, 0, 32)
-            SectionFrame.BackgroundColor3 = SaturnLib.Themes.Section
-            SectionFrame.BackgroundTransparency = SaturnLib.Themes.SectionTransparency
+            SectionFrame.Size = UDim2.new(1, 0, 0, 24)
+            SectionFrame.BackgroundTransparency = 1
             SectionFrame.BorderSizePixel = 0
             SectionFrame.Parent = TabPage
 
-            local SecCorner = Instance.new("UICorner")
-            SecCorner.CornerRadius = UDim.new(0, 10)
-            SecCorner.Parent = SectionFrame
-
-            local SecStroke = Instance.new("UIStroke")
-            SecStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-            SecStroke.Color = SaturnLib.Themes.Border
-            SecStroke.Transparency = 0.90
-            SecStroke.Parent = SectionFrame
-
             local SecHeader = Instance.new("Frame")
             SecHeader.Name = "Header"
-            SecHeader.Size = UDim2.new(1, 0, 0, 28)
+            SecHeader.Size = UDim2.new(1, 0, 0, 22)
             SecHeader.BackgroundTransparency = 1
             SecHeader.Parent = SectionFrame
 
             local SecTitleLabel = Instance.new("TextLabel")
-            SecTitleLabel.Position = UDim2.new(0, 14, 0, 0)
-            SecTitleLabel.Size = UDim2.new(1, -28, 1, 0)
+            SecTitleLabel.Position = UDim2.new(0, 0, 0, 0)
+            SecTitleLabel.Size = UDim2.new(1, 0, 1, 0)
             SecTitleLabel.BackgroundTransparency = 1
             SecTitleLabel.Font = getFont("Bold")
             SecTitleLabel.Text = (secTitle or "SECTION"):upper()
@@ -944,25 +933,50 @@ function SaturnLib:CreateWindow(config)
             SecTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
             SecTitleLabel.Parent = SecHeader
 
+            local SecHeaderLine = Instance.new("Frame")
+            SecHeaderLine.Name = "HeaderLine"
+            SecHeaderLine.Position = UDim2.new(0, 0, 0, 22)
+            SecHeaderLine.Size = UDim2.new(1, 0, 0, 1)
+            SecHeaderLine.BackgroundColor3 = SaturnLib.Themes.Border
+            SecHeaderLine.BackgroundTransparency = 0.86
+            SecHeaderLine.BorderSizePixel = 0
+            SecHeaderLine.Parent = SectionFrame
+
             local SecContainer = Instance.new("Frame")
             SecContainer.Name = "Container"
-            SecContainer.Position = UDim2.new(0, 10, 0, 30)
-            SecContainer.Size = UDim2.new(1, -20, 0, 0)
+            SecContainer.Position = UDim2.new(0, 0, 0, 23)
+            SecContainer.Size = UDim2.new(1, 0, 0, 0)
             SecContainer.BackgroundTransparency = 1
             SecContainer.Parent = SectionFrame
 
             local SecLayout = Instance.new("UIListLayout")
             SecLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            SecLayout.Padding = UDim.new(0, 6)
+            SecLayout.Padding = UDim.new(0, 0)
             SecLayout.Parent = SecContainer
 
             local function updateSecSize()
-                local h = SecLayout.AbsoluteContentSize.Y + 40
-                SectionFrame.Size = UDim2.new(1, 0, 0, h)
-                SecContainer.Size = UDim2.new(1, -20, 0, SecLayout.AbsoluteContentSize.Y)
+                local contentH = SecLayout.AbsoluteContentSize.Y
+                SectionFrame.Size = UDim2.new(1, 0, 0, 23 + contentH)
+                SecContainer.Size = UDim2.new(1, 0, 0, contentH)
             end
 
             SecLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateSecSize)
+
+            -- Flat row: no card background, thin divider under each setting
+            local function styleRow(Item)
+                Item.BackgroundTransparency = 1
+                local stroke = Item:FindFirstChildOfClass("UIStroke")
+                if stroke then
+                    stroke.Transparency = 1
+                end
+                local line = Instance.new("Frame")
+                line.Name = "Divider"
+                line.Size = UDim2.new(1, 0, 0, 1)
+                line.BackgroundColor3 = SaturnLib.Themes.Border
+                line.BackgroundTransparency = 0.90
+                line.BorderSizePixel = 0
+                line.Parent = SecContainer
+            end
 
             local SecObj = {}
 
@@ -979,7 +993,7 @@ function SaturnLib:CreateWindow(config)
 
                 local Item = Instance.new("TextButton")
                 Item.Name = name .. "_Toggle"
-                Item.Size = UDim2.new(1, 0, 0, 34)
+                Item.Size = UDim2.new(1, 0, 0, 38)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
                 Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
@@ -1054,6 +1068,8 @@ function SaturnLib:CreateWindow(config)
                     pcall(callback, state)
                 end
 
+                styleRow(Item)
+
                 return {
                     Set = setToggle,
                     Get = function() return state end
@@ -1077,7 +1093,7 @@ function SaturnLib:CreateWindow(config)
 
                 local Item = Instance.new("Frame")
                 Item.Name = name .. "_Slider"
-                Item.Size = UDim2.new(1, 0, 0, 46)
+                Item.Size = UDim2.new(1, 0, 0, 50)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
                 Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
@@ -1178,6 +1194,8 @@ function SaturnLib:CreateWindow(config)
                 end)
 
                 pcall(callback, value)
+
+                styleRow(Item)
 
                 return {
                     Set = function(v)
@@ -1284,6 +1302,7 @@ function SaturnLib:CreateWindow(config)
                         local oBtn = Instance.new("TextButton")
                         oBtn.Size = UDim2.new(1, 0, 0, 26)
                         oBtn.BackgroundColor3 = (opt == selected) and Color3.fromRGB(35, 35, 48) or Color3.fromRGB(20, 20, 28)
+                        oBtn.BackgroundTransparency = (opt == selected) and 0.55 or 1
                         oBtn.BorderSizePixel = 0
                         oBtn.Font = getFont("Medium")
                         oBtn.Text = "  " .. tostring(opt)
@@ -1322,6 +1341,8 @@ function SaturnLib:CreateWindow(config)
                 HeaderBtn.MouseButton1Click:Connect(toggleOpen)
                 pcall(callback, selected)
 
+                styleRow(Item)
+
                 return {
                     Set = function(newOpt)
                         selected = newOpt
@@ -1356,7 +1377,7 @@ function SaturnLib:CreateWindow(config)
 
                 local Item = Instance.new("Frame")
                 Item.Name = name .. "_Keybind"
-                Item.Size = UDim2.new(1, 0, 0, 34)
+                Item.Size = UDim2.new(1, 0, 0, 38)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
                 Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
@@ -1420,6 +1441,8 @@ function SaturnLib:CreateWindow(config)
                     end
                 end)
 
+                styleRow(Item)
+
                 return {
                     Set = function(k)
                         key = k
@@ -1439,15 +1462,12 @@ function SaturnLib:CreateWindow(config)
 
                 local Item = Instance.new("TextButton")
                 Item.Name = name .. "_Button"
-                Item.Size = UDim2.new(1, 0, 0, 34)
-                Item.BackgroundColor3 = SaturnLib.Themes.Element
-                Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
+                Item.Size = UDim2.new(1, 0, 0, 38)
+                Item.BackgroundColor3 = SaturnLib.Themes.ElementHover
+                Item.BackgroundTransparency = 1
                 Item.BorderSizePixel = 0
                 Item.AutoButtonColor = false
-                Item.Font = getFont("Medium")
-                Item.Text = name
-                Item.TextColor3 = SaturnLib.Themes.Text
-                Item.TextSize = 12
+                Item.Text = ""
                 Item.Parent = SecContainer
 
                 local ItemCorner = Instance.new("UICorner")
@@ -1461,21 +1481,34 @@ function SaturnLib:CreateWindow(config)
                 ItemStroke.Thickness = 1
                 ItemStroke.Parent = Item
 
+                local Label = Instance.new("TextLabel")
+                Label.Position = UDim2.new(0, 12, 0, 0)
+                Label.Size = UDim2.new(1, -24, 1, 0)
+                Label.BackgroundTransparency = 1
+                Label.Font = getFont("Medium")
+                Label.Text = name
+                Label.TextColor3 = SaturnLib.Themes.Text
+                Label.TextSize = 12
+                Label.TextXAlignment = Enum.TextXAlignment.Left
+                Label.Parent = Item
+
                 Item.MouseEnter:Connect(function()
                     TweenService:Create(Item, TweenInfo.new(0.15), {
-                        BackgroundColor3 = SaturnLib.Themes.ElementHover
+                        BackgroundTransparency = 0.95
                     }):Play()
                 end)
 
                 Item.MouseLeave:Connect(function()
                     TweenService:Create(Item, TweenInfo.new(0.15), {
-                        BackgroundColor3 = SaturnLib.Themes.Element
+                        BackgroundTransparency = 1
                     }):Play()
                 end)
 
                 Item.MouseButton1Click:Connect(function()
                     pcall(callback)
                 end)
+
+                styleRow(Item)
 
                 return Item
             end
@@ -1493,7 +1526,7 @@ function SaturnLib:CreateWindow(config)
 
                 local Item = Instance.new("Frame")
                 Item.Name = name .. "_ColorPicker"
-                Item.Size = UDim2.new(1, 0, 0, 34)
+                Item.Size = UDim2.new(1, 0, 0, 38)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
                 Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
@@ -1552,6 +1585,8 @@ function SaturnLib:CreateWindow(config)
                     pcall(callback, currentColor)
                 end)
 
+                styleRow(Item)
+
                 return {
                     Set = function(c)
                         currentColor = c
@@ -1577,7 +1612,7 @@ function SaturnLib:CreateWindow(config)
 
                 local Item = Instance.new("Frame")
                 Item.Name = name .. "_TextBox"
-                Item.Size = UDim2.new(1, 0, 0, 36)
+                Item.Size = UDim2.new(1, 0, 0, 40)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
                 Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
@@ -1629,6 +1664,8 @@ function SaturnLib:CreateWindow(config)
                     if flag then SaturnLib.Flags[flag] = text end
                     pcall(callback, text)
                 end)
+
+                styleRow(Item)
 
                 return {
                     Set = function(t)
