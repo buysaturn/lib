@@ -58,24 +58,9 @@ local function getFont(weight)
     end
 end
 
--- Typography: Montserrat via FontFace (falls back to the enum font above)
-local FONT_FAMILY = "rbxasset://fonts/families/Montserrat.json"
-
+-- Typography: same font family as the loader (BuilderSans, Gotham fallback)
 local function applyFont(obj, weight)
-    local weightEnum = Enum.FontWeight.Regular
-    if weight == "Bold" then
-        weightEnum = Enum.FontWeight.Bold
-    elseif weight == "Medium" then
-        weightEnum = Enum.FontWeight.Medium
-    elseif weight == "SemiBold" then
-        weightEnum = Enum.FontWeight.SemiBold
-    end
-    local ok = pcall(function()
-        obj.FontFace = Font.new(FONT_FAMILY, weightEnum)
-    end)
-    if not ok then
-        obj.Font = getFont(weight)
-    end
+    obj.Font = getFont(weight)
 end
 
 -- Safe GUI container
@@ -532,14 +517,14 @@ function SaturnLib:CreateWindow(config)
     local CollapseBtn = Instance.new("TextButton")
     CollapseBtn.Name = "CollapseBtn"
     CollapseBtn.AnchorPoint = Vector2.new(1, 0.5)
-    CollapseBtn.Position = UDim2.new(1, -48, 0.5, 0)
+    CollapseBtn.Position = UDim2.new(1, -44, 0.5, 0)
     CollapseBtn.Size = UDim2.new(0, 24, 0, 24)
     CollapseBtn.BackgroundTransparency = 1
     CollapseBtn.BorderSizePixel = 0
     applyFont(CollapseBtn, "Bold")
     CollapseBtn.Text = "−"
     CollapseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
-    CollapseBtn.TextSize = 14
+    CollapseBtn.TextSize = 20
     CollapseBtn.AutoButtonColor = false
     CollapseBtn.Parent = TopBar
 
