@@ -800,9 +800,9 @@ function SaturnLib:CreateWindow(config)
 
         local TabStroke = Instance.new("UIStroke")
         TabStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        TabStroke.Color = Color3.fromRGB(255, 255, 255)
+        TabStroke.Color = SaturnLib.Themes.Border
         TabStroke.Transparency = 1
-        TabStroke.Thickness = 1.5
+        TabStroke.Thickness = 1
         TabStroke.Parent = TabBtn
 
         local TabIndicator = Instance.new("Frame")
@@ -893,7 +893,7 @@ function SaturnLib:CreateWindow(config)
             }):Play()
             if TabStroke then
                 TweenService:Create(TabStroke, TweenInfo.new(0.15), {
-                    Transparency = 0.8
+                    Transparency = 0.90
                 }):Play()
             end
             TweenService:Create(TabLabel, TweenInfo.new(0.15), {
