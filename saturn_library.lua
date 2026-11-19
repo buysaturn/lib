@@ -556,19 +556,33 @@ function SaturnLib:CreateWindow(config)
     ContentContainer.BackgroundTransparency = 1
     ContentContainer.Parent = Body
 
-    -- Dynamic Island (minimized state): icon + "Saturn" + live FPS
+    -- Dynamic Island (minimized state): fixed bottom-center pill
     local ISLAND_W = 190
     local ISLAND_H = 42
+    local ISLAND_MARGIN = 28
 
     local Island = Instance.new("Frame")
     Island.Name = "Island"
-    Island.Size = UDim2.new(1, 0, 1, 0)
-    Island.BackgroundTransparency = 1
+    Island.AnchorPoint = Vector2.new(0.5, 1)
+    Island.Position = UDim2.new(0.5, 0, 1, -ISLAND_MARGIN)
+    Island.Size = UDim2.new(0, ISLAND_W, 0, ISLAND_H)
+    Island.BackgroundColor3 = SaturnLib.Themes.Background
+    Island.BackgroundTransparency = 0.05
     Island.BorderSizePixel = 0
-    Island.ClipsDescendants = true
     Island.Visible = false
-    Island.ZIndex = 3
-    Island.Parent = Main
+    Island.ZIndex = 50
+    Island.Parent = ScreenGui
+
+    local IslandCorner = Instance.new("UICorner")
+    IslandCorner.CornerRadius = UDim.new(1, 0)
+    IslandCorner.Parent = Island
+
+    local IslandStroke = Instance.new("UIStroke")
+    IslandStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    IslandStroke.Color = SaturnLib.Themes.Border
+    IslandStroke.Transparency = SaturnLib.Themes.BorderTransparency
+    IslandStroke.Thickness = 1
+    IslandStroke.Parent = Island
 
     local IslandIcon = Instance.new("ImageLabel")
     IslandIcon.Name = "Icon"
@@ -578,22 +592,20 @@ function SaturnLib:CreateWindow(config)
     IslandIcon.BackgroundTransparency = 1
     IslandIcon.Image = Logo.Image
     IslandIcon.ScaleType = Enum.ScaleType.Fit
-    IslandIcon.ImageTransparency = 1
-    IslandIcon.ZIndex = 3
+    IslandIcon.ZIndex = 51
     IslandIcon.Parent = Island
 
     local IslandTitle = Instance.new("TextLabel")
     IslandTitle.Name = "Title"
     IslandTitle.Position = UDim2.new(0, 43, 0, 0)
-    IslandTitle.Size = UDim2.new(0, 80, 1, 0)
+    IslandTitle.Size = UDim2.new(0, 60, 1, 0)
     IslandTitle.BackgroundTransparency = 1
     applyFont(IslandTitle, "Bold")
     IslandTitle.Text = TitleText
     IslandTitle.TextColor3 = SaturnLib.Themes.Text
     IslandTitle.TextSize = 13
     IslandTitle.TextXAlignment = Enum.TextXAlignment.Left
-    IslandTitle.TextTransparency = 1
-    IslandTitle.ZIndex = 3
+    IslandTitle.ZIndex = 51
     IslandTitle.Parent = Island
 
     local IslandFps = Instance.new("TextLabel")
@@ -607,9 +619,30 @@ function SaturnLib:CreateWindow(config)
     IslandFps.TextColor3 = SaturnLib.Themes.TextDim
     IslandFps.TextSize = 11
     IslandFps.TextXAlignment = Enum.TextXAlignment.Right
-    IslandFps.TextTransparency = 1
-    IslandFps.ZIndex = 3
+    IslandFps.ZIndex = 51
     IslandFps.Parent = Island
+
+    -- Click surface (the island is fixed, not draggable)
+    local IslandHit = Instance.new("TextButton")
+    IslandHit.Name = "IslandHit"
+    IslandHit.Size = UDim2.new(1, 0, 1, 0)
+    IslandHit.BackgroundTransparency = 1
+    IslandHit.BorderSizePixel = 0
+    IslandHit.Text = ""
+    IslandHit.AutoButtonColor = false
+    IslandHit.ZIndex = 55
+    IslandHit.Parent = Island
+
+    IslandHit.MouseEnter:Connect(function()
+        TweenService:Create(Island, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0
+        }):Play()
+    end)
+    IslandHit.MouseLeave:Connect(function()
+        TweenService:Create(Island, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0.05
+        }):Play()
+    end)
 
     -- Live FPS counter (updates every 0.25s)
     local fpsAccum = 0
@@ -627,21 +660,8 @@ function SaturnLib:CreateWindow(config)
         end
     end)
 
-    -- Click / drag surface for the island
-    local CollapsedHit = Instance.new("TextButton")
-    CollapsedHit.Name = "CollapsedHit"
-    CollapsedHit.Size = UDim2.new(1, 0, 1, 0)
-    CollapsedHit.BackgroundTransparency = 1
-    CollapsedHit.BorderSizePixel = 0
-    CollapsedHit.Text = ""
-    CollapsedHit.AutoButtonColor = false
-    CollapsedHit.Visible = false
-    CollapsedHit.ZIndex = 4
-    CollapsedHit.Parent = Main
-
-    local CollapsedDrag = makeDraggable(CollapsedHit, Main)
-
     local Collapsed = false
+    local RestorePosition = Main.Position
     local Transitioning = false
 
     local function fadeBody(target, duration)
@@ -665,11 +685,16 @@ function SaturnLib:CreateWindow(config)
         end
     end
 
-    local function islandFade(target, duration)
-        local info = TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-        TweenService:Create(IslandIcon, info, { ImageTransparency = target }):Play()
-        TweenService:Create(IslandTitle, info, { TextTransparency = target }):Play()
-        TweenService:Create(IslandFps, info, { TextTransparency = target }):Play()
+    -- Island center in ScreenGui space (fixed bottom-center, independent of window drag)
+    local function getIslandCenter()
+        local viewport = ScreenGui.AbsoluteSize
+        if viewport.X <= 0 or viewport.Y <= 0 then
+            local camera = workspace.CurrentCamera
+            if camera then
+                viewport = camera.ViewportSize
+            end
+        end
+        return UDim2.fromOffset(viewport.X / 2, viewport.Y - ISLAND_MARGIN - ISLAND_H / 2)
     end
 
     local function collapseWindow()
@@ -678,27 +703,32 @@ function SaturnLib:CreateWindow(config)
         end
         Collapsed = true
         Transitioning = true
+        SaturnLib.IsOpen = false
+        RestorePosition = Main.Position
 
+        Island.Visible = false
         Body.Visible = true
-        CollapsedHit.Visible = false
-        Island.Visible = true
         fadeBody(1, 0.16)
         setBlur(0, 0.28)
 
-        -- Flatten the window into a pill-shaped island
-        TweenService:Create(MainCorner, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        TweenService:Create(MainCorner, TweenInfo.new(0.32, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
             CornerRadius = UDim.new(1, 0)
         }):Play()
 
-        local tween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        -- Window flies into the fixed island at the bottom center
+        local tween = TweenService:Create(Main, TweenInfo.new(0.32, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            Position = getIslandCenter(),
             Size = UDim2.new(0, ISLAND_W, 0, ISLAND_H),
             BackgroundTransparency = 0.05
         })
         tween:Play()
         tween.Completed:Connect(function()
+            if not Collapsed then
+                return
+            end
             Body.Visible = false
-            CollapsedHit.Visible = true
-            islandFade(0, 0.16)
+            Main.Visible = false
+            Island.Visible = true
             Transitioning = false
         end)
     end
@@ -709,37 +739,41 @@ function SaturnLib:CreateWindow(config)
         end
         Collapsed = false
         Transitioning = true
+        SaturnLib.IsOpen = true
 
+        Island.Visible = false
+        Main.Visible = true
+        Main.Position = getIslandCenter()
+        Main.Size = UDim2.new(0, ISLAND_W, 0, ISLAND_H)
+        Main.BackgroundTransparency = 0.05
+        MainCorner.CornerRadius = UDim.new(1, 0)
         Body.Visible = true
-        CollapsedHit.Visible = false
-        islandFade(1, 0.1)
-        fadeBody(0, 0.22)
+        Body.GroupTransparency = 1
+        fadeBody(0, 0.26)
         setBlur(BLUR_STRENGTH, 0.3)
 
-        TweenService:Create(MainCorner, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        TweenService:Create(MainCorner, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
             CornerRadius = UDim.new(0, 16)
         }):Play()
 
-        local tween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        -- Fly back to the exact spot where the menu was closed
+        local tween = TweenService:Create(Main, TweenInfo.new(0.32, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            Position = RestorePosition,
             Size = UDim2.new(0, SizeX, 0, SizeY),
             BackgroundTransparency = SaturnLib.Themes.BackgroundTransparency
         })
         tween:Play()
         tween.Completed:Connect(function()
-            Island.Visible = false
+            if Collapsed then
+                return
+            end
             Transitioning = false
         end)
     end
 
     CollapseBtn.MouseButton1Click:Connect(collapseWindow)
     CloseBtn.MouseButton1Click:Connect(collapseWindow)
-
-    CollapsedHit.MouseButton1Click:Connect(function()
-        if CollapsedDrag.WasDragged() then
-            return
-        end
-        expandWindow()
-    end)
+    IslandHit.MouseButton1Click:Connect(expandWindow)
 
     -- Toggle Hotkey handling (Right Shift always works, plus any custom ToggleKey):
     -- expanded -> flies into the dynamic island, island -> expands back
@@ -751,6 +785,9 @@ function SaturnLib:CreateWindow(config)
             return
         end
         if input.KeyCode ~= Enum.KeyCode.RightShift and input.KeyCode ~= SaturnLib.ToggleKey then
+            return
+        end
+        if Transitioning then
             return
         end
 
@@ -790,8 +827,15 @@ function SaturnLib:CreateWindow(config)
             end
         else
             if Collapsed then
-                -- Keep the island ready for the next toggle
+                -- Full hide (API): drop the island and reset the window to its restore spot
+                Collapsed = false
+                Transitioning = false
+                Island.Visible = false
                 Main.Visible = false
+                Main.Position = RestorePosition
+                Main.Size = UDim2.new(0, SizeX, 0, SizeY)
+                Main.BackgroundTransparency = SaturnLib.Themes.BackgroundTransparency
+                MainCorner.CornerRadius = UDim.new(0, 16)
                 setBlur(0, 0.2)
                 return
             end
