@@ -390,6 +390,12 @@ function SaturnLib:CreateWindow(config)
     TabLayout.Padding = UDim.new(0, 4)
     TabLayout.Parent = TabContainer
 
+    -- Inset tabs from the scroll frame edges, otherwise its clipping cuts the side strokes
+    local TabPadding = Instance.new("UIPadding")
+    TabPadding.PaddingLeft = UDim.new(0, 4)
+    TabPadding.PaddingRight = UDim.new(0, 4)
+    TabPadding.Parent = TabContainer
+
     -- Spacers keep the first/last tab stroke away from the scroll frame's clip edge
     local TabTopSpacer = Instance.new("Frame")
     TabTopSpacer.Name = "TopSpacer"
@@ -778,7 +784,7 @@ function SaturnLib:CreateWindow(config)
         -- Tab Button in Sidebar
         local TabBtn = Instance.new("TextButton")
         TabBtn.Name = tabName .. "_Btn"
-        TabBtn.Size = UDim2.new(1, 0, 0, 34)
+        TabBtn.Size = UDim2.new(1, -8, 0, 34)
         TabBtn.BackgroundColor3 = SaturnLib.Themes.Element
         TabBtn.BackgroundTransparency = 1
         TabBtn.BorderSizePixel = 0
