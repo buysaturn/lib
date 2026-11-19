@@ -207,7 +207,7 @@ function SaturnLib:Notify(opts)
     applyFont(tLabel, "Bold")
     tLabel.Text = title
     tLabel.TextColor3 = SaturnLib.Themes.Text
-    tLabel.TextSize = 13
+    tLabel.TextSize = 14
     tLabel.TextXAlignment = Enum.TextXAlignment.Left
     tLabel.Parent = card
 
@@ -218,7 +218,7 @@ function SaturnLib:Notify(opts)
     applyFont(cLabel, "Medium")
     cLabel.Text = content
     cLabel.TextColor3 = SaturnLib.Themes.TextDim
-    cLabel.TextSize = 12
+    cLabel.TextSize = 13
     cLabel.TextXAlignment = Enum.TextXAlignment.Left
     cLabel.TextWrapped = true
     cLabel.Parent = card
@@ -360,25 +360,25 @@ function SaturnLib:CreateWindow(config)
 
     local Title = Instance.new("TextLabel")
     Title.Name = "Title"
-    Title.Position = UDim2.new(0, 46, 0, 12)
-    Title.Size = UDim2.new(1, -50, 0, 18)
+    Title.Position = UDim2.new(0, 46, 0, 9)
+    Title.Size = UDim2.new(1, -50, 0, 22)
     Title.BackgroundTransparency = 1
     applyFont(Title, "Bold")
     Title.Text = TitleText
     Title.TextColor3 = SaturnLib.Themes.Text
-    Title.TextSize = 14
+    Title.TextSize = 18
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = Brand
 
     local SubTitle = Instance.new("TextLabel")
     SubTitle.Name = "SubTitle"
-    SubTitle.Position = UDim2.new(0, 46, 0, 28)
+    SubTitle.Position = UDim2.new(0, 46, 0, 31)
     SubTitle.Size = UDim2.new(1, -50, 0, 14)
     SubTitle.BackgroundTransparency = 1
     applyFont(SubTitle, "Medium")
     SubTitle.Text = SubTitleText
     SubTitle.TextColor3 = SaturnLib.Themes.TextDim
-    SubTitle.TextSize = 10
+    SubTitle.TextSize = 11
     SubTitle.TextXAlignment = Enum.TextXAlignment.Left
     SubTitle.Parent = Brand
 
@@ -461,7 +461,7 @@ function SaturnLib:CreateWindow(config)
     applyFont(BadgeText, "Medium")
     BadgeText.Text = config.BadgeText or "Active Session"
     BadgeText.TextColor3 = SaturnLib.Themes.TextDim
-    BadgeText.TextSize = 11
+    BadgeText.TextSize = 12
     BadgeText.TextXAlignment = Enum.TextXAlignment.Left
     BadgeText.Parent = BottomBadge
 
@@ -487,52 +487,78 @@ function SaturnLib:CreateWindow(config)
     applyFont(CurrentTabLabel, "Bold")
     CurrentTabLabel.Text = "MAIN"
     CurrentTabLabel.TextColor3 = SaturnLib.Themes.Text
-    CurrentTabLabel.TextSize = 14
+    CurrentTabLabel.TextSize = 15
     CurrentTabLabel.TextXAlignment = Enum.TextXAlignment.Left
     CurrentTabLabel.Parent = TopBar
 
-    -- Close Button (Clean ASCII 'X' matching Saturn Loader)
+    -- Window icons are drawn as geometry so the dash and X are exactly centered and symmetric
+    local ICON_DIM = Color3.fromRGB(140, 140, 150)
+    local ICON_HOVER = Color3.fromRGB(255, 255, 255)
+
+    local function makeIconBar(parent, size, rotation)
+        local bar = Instance.new("Frame")
+        bar.AnchorPoint = Vector2.new(0.5, 0.5)
+        bar.Position = UDim2.new(0.5, 0, 0.5, 0)
+        bar.Size = size
+        bar.Rotation = rotation or 0
+        bar.BackgroundColor3 = ICON_DIM
+        bar.BorderSizePixel = 0
+        bar.Parent = parent
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(1, 0)
+        corner.Parent = bar
+        return bar
+    end
+
+    local function tintIconBars(bars, color)
+        for _, bar in ipairs(bars) do
+            TweenService:Create(bar, TweenInfo.new(0.12, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                BackgroundColor3 = color
+            }):Play()
+        end
+    end
+
+    -- Close Button (geometric X)
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Name = "CloseBtn"
     CloseBtn.AnchorPoint = Vector2.new(1, 0.5)
-    CloseBtn.Position = UDim2.new(1, -16, 0.5, 0)
+    CloseBtn.Position = UDim2.new(1, -12, 0.5, 0)
     CloseBtn.Size = UDim2.new(0, 24, 0, 24)
     CloseBtn.BackgroundTransparency = 1
     CloseBtn.BorderSizePixel = 0
-    applyFont(CloseBtn, "Bold")
-    CloseBtn.Text = "X"
-    CloseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
-    CloseBtn.TextSize = 14
+    CloseBtn.Text = ""
     CloseBtn.AutoButtonColor = false
     CloseBtn.Parent = TopBar
 
+    local XBarA = makeIconBar(CloseBtn, UDim2.new(0, 13, 0, 2), 45)
+    local XBarB = makeIconBar(CloseBtn, UDim2.new(0, 13, 0, 2), -45)
+
     CloseBtn.MouseEnter:Connect(function()
-        CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        tintIconBars({ XBarA, XBarB }, ICON_HOVER)
     end)
     CloseBtn.MouseLeave:Connect(function()
-        CloseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
+        tintIconBars({ XBarA, XBarB }, ICON_DIM)
     end)
 
-    -- Minimize Button (collapses the window into the dynamic island)
+    -- Minimize Button (geometric dash, same thickness as the X)
     local CollapseBtn = Instance.new("TextButton")
     CollapseBtn.Name = "CollapseBtn"
     CollapseBtn.AnchorPoint = Vector2.new(1, 0.5)
-    CollapseBtn.Position = UDim2.new(1, -44, 0.5, 0)
+    CollapseBtn.Position = UDim2.new(1, -42, 0.5, 0)
     CollapseBtn.Size = UDim2.new(0, 24, 0, 24)
     CollapseBtn.BackgroundTransparency = 1
     CollapseBtn.BorderSizePixel = 0
-    applyFont(CollapseBtn, "Bold")
-    CollapseBtn.Text = "−"
-    CollapseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
-    CollapseBtn.TextSize = 20
+    CollapseBtn.Text = ""
     CollapseBtn.AutoButtonColor = false
     CollapseBtn.Parent = TopBar
 
+    local MinusBar = makeIconBar(CollapseBtn, UDim2.new(0, 12, 0, 2), 0)
+
     CollapseBtn.MouseEnter:Connect(function()
-        CollapseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        tintIconBars({ MinusBar }, ICON_HOVER)
     end)
     CollapseBtn.MouseLeave:Connect(function()
-        CollapseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
+        tintIconBars({ MinusBar }, ICON_DIM)
     end)
 
     -- Content Area on Right Side
@@ -544,7 +570,7 @@ function SaturnLib:CreateWindow(config)
     ContentContainer.Parent = Body
 
     -- Dynamic Island (minimized state): fixed top-center pill
-    local ISLAND_W = 190
+    local ISLAND_W = 200
     local ISLAND_H = 42
     local ISLAND_MARGIN = 14
 
@@ -590,7 +616,7 @@ function SaturnLib:CreateWindow(config)
     applyFont(IslandTitle, "Bold")
     IslandTitle.Text = TitleText
     IslandTitle.TextColor3 = SaturnLib.Themes.Text
-    IslandTitle.TextSize = 13
+    IslandTitle.TextSize = 16
     IslandTitle.TextXAlignment = Enum.TextXAlignment.Left
     IslandTitle.ZIndex = 51
     IslandTitle.Parent = Island
@@ -604,7 +630,7 @@ function SaturnLib:CreateWindow(config)
     applyFont(IslandFps, "Medium")
     IslandFps.Text = "60 FPS"
     IslandFps.TextColor3 = SaturnLib.Themes.TextDim
-    IslandFps.TextSize = 11
+    IslandFps.TextSize = 13
     IslandFps.TextXAlignment = Enum.TextXAlignment.Right
     IslandFps.ZIndex = 51
     IslandFps.Parent = Island
@@ -927,7 +953,7 @@ function SaturnLib:CreateWindow(config)
         applyFont(TabLabel, "Medium")
         TabLabel.Text = tabName:upper()
         TabLabel.TextColor3 = SaturnLib.Themes.TextDim
-        TabLabel.TextSize = 12
+        TabLabel.TextSize = 14
         TabLabel.TextXAlignment = Enum.TextXAlignment.Left
         TabLabel.Parent = TabBtn
 
@@ -1036,7 +1062,7 @@ function SaturnLib:CreateWindow(config)
             applyFont(SecTitleLabel, "Bold")
             SecTitleLabel.Text = (secTitle or "SECTION"):upper()
             SecTitleLabel.TextColor3 = SaturnLib.Themes.AccentDim
-            SecTitleLabel.TextSize = 12
+            SecTitleLabel.TextSize = 14
             SecTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
             SecTitleLabel.Parent = SecHeader
 
@@ -1124,7 +1150,7 @@ function SaturnLib:CreateWindow(config)
                 applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
-                Label.TextSize = 12
+                Label.TextSize = 14
                 Label.TextXAlignment = Enum.TextXAlignment.Left
                 Label.Parent = Item
 
@@ -1222,7 +1248,7 @@ function SaturnLib:CreateWindow(config)
                 applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
-                Label.TextSize = 12
+                Label.TextSize = 14
                 Label.TextXAlignment = Enum.TextXAlignment.Left
                 Label.Parent = Item
 
@@ -1234,7 +1260,7 @@ function SaturnLib:CreateWindow(config)
                 applyFont(ValueLabel, "Bold")
                 ValueLabel.Text = string.format("%." .. tostring(decimals) .. "f%s", value, suffix)
                 ValueLabel.TextColor3 = SaturnLib.Themes.AccentDim
-                ValueLabel.TextSize = 12
+                ValueLabel.TextSize = 14
                 ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
                 ValueLabel.Parent = Item
 
@@ -1361,7 +1387,7 @@ function SaturnLib:CreateWindow(config)
                 applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
-                Label.TextSize = 12
+                Label.TextSize = 14
                 Label.TextXAlignment = Enum.TextXAlignment.Left
                 Label.Parent = HeaderBtn
 
@@ -1373,7 +1399,7 @@ function SaturnLib:CreateWindow(config)
                 applyFont(SelLabel, "Bold")
                 SelLabel.Text = tostring(selected)
                 SelLabel.TextColor3 = SaturnLib.Themes.TextDim
-                SelLabel.TextSize = 12
+                SelLabel.TextSize = 14
                 SelLabel.TextXAlignment = Enum.TextXAlignment.Right
                 SelLabel.Parent = HeaderBtn
 
@@ -1385,7 +1411,7 @@ function SaturnLib:CreateWindow(config)
                 Arrow.Font = getFont("Bold")
                 Arrow.Text = "▾"
                 Arrow.TextColor3 = SaturnLib.Themes.TextDim
-                Arrow.TextSize = 12
+                Arrow.TextSize = 14
                 Arrow.Parent = HeaderBtn
 
                 local OptHolder = Instance.new("Frame")
@@ -1412,7 +1438,7 @@ function SaturnLib:CreateWindow(config)
                         applyFont(oBtn, "Medium")
                         oBtn.Text = "  " .. tostring(opt)
                         oBtn.TextColor3 = (opt == selected) and SaturnLib.Themes.Accent or SaturnLib.Themes.TextDim
-                        oBtn.TextSize = 11
+                        oBtn.TextSize = 14
                         oBtn.TextXAlignment = Enum.TextXAlignment.Left
                         oBtn.Parent = OptHolder
 
@@ -1506,7 +1532,7 @@ function SaturnLib:CreateWindow(config)
                 applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
-                Label.TextSize = 12
+                Label.TextSize = 14
                 Label.TextXAlignment = Enum.TextXAlignment.Left
                 Label.Parent = Item
 
@@ -1519,7 +1545,7 @@ function SaturnLib:CreateWindow(config)
                 applyFont(KeyBtn, "Bold")
                 KeyBtn.Text = key.Name
                 KeyBtn.TextColor3 = SaturnLib.Themes.Text
-                KeyBtn.TextSize = 11
+                KeyBtn.TextSize = 13
                 KeyBtn.AutoButtonColor = false
                 KeyBtn.Parent = Item
 
@@ -1593,7 +1619,7 @@ function SaturnLib:CreateWindow(config)
                 applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
-                Label.TextSize = 12
+                Label.TextSize = 14
                 Label.TextXAlignment = Enum.TextXAlignment.Left
                 Label.Parent = Item
 
@@ -1655,7 +1681,7 @@ function SaturnLib:CreateWindow(config)
                 applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
-                Label.TextSize = 12
+                Label.TextSize = 14
                 Label.TextXAlignment = Enum.TextXAlignment.Left
                 Label.Parent = Item
 
@@ -1741,7 +1767,7 @@ function SaturnLib:CreateWindow(config)
                 applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
-                Label.TextSize = 12
+                Label.TextSize = 14
                 Label.TextXAlignment = Enum.TextXAlignment.Left
                 Label.Parent = Item
 
@@ -1756,7 +1782,7 @@ function SaturnLib:CreateWindow(config)
                 Input.PlaceholderText = placeholder
                 Input.PlaceholderColor3 = SaturnLib.Themes.TextDim
                 Input.TextColor3 = SaturnLib.Themes.Text
-                Input.TextSize = 11
+                Input.TextSize = 14
                 Input.ClearTextOnFocus = false
                 Input.Parent = Item
 
