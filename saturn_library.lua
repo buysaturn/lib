@@ -928,8 +928,8 @@ function SaturnLib:CreateWindow(config)
             SecTitleLabel.BackgroundTransparency = 1
             SecTitleLabel.Font = getFont("Bold")
             SecTitleLabel.Text = (secTitle or "SECTION"):upper()
-            SecTitleLabel.TextColor3 = SaturnLib.Themes.TextDim
-            SecTitleLabel.TextSize = 11
+            SecTitleLabel.TextColor3 = SaturnLib.Themes.AccentDim
+            SecTitleLabel.TextSize = 12
             SecTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
             SecTitleLabel.Parent = SecHeader
 
@@ -938,7 +938,7 @@ function SaturnLib:CreateWindow(config)
             SecHeaderLine.Position = UDim2.new(0, 0, 0, 22)
             SecHeaderLine.Size = UDim2.new(1, 0, 0, 1)
             SecHeaderLine.BackgroundColor3 = SaturnLib.Themes.Border
-            SecHeaderLine.BackgroundTransparency = 0.86
+            SecHeaderLine.BackgroundTransparency = 0.82
             SecHeaderLine.BorderSizePixel = 0
             SecHeaderLine.Parent = SectionFrame
 
@@ -991,7 +991,7 @@ function SaturnLib:CreateWindow(config)
 
                 local Item = Instance.new("TextButton")
                 Item.Name = name .. "_Toggle"
-                Item.Size = UDim2.new(1, 0, 0, 38)
+                Item.Size = UDim2.new(1, 0, 0, 40)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
                 Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
@@ -1091,7 +1091,7 @@ function SaturnLib:CreateWindow(config)
 
                 local Item = Instance.new("Frame")
                 Item.Name = name .. "_Slider"
-                Item.Size = UDim2.new(1, 0, 0, 50)
+                Item.Size = UDim2.new(1, 0, 0, 40)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
                 Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
@@ -1133,8 +1133,8 @@ function SaturnLib:CreateWindow(config)
 
                 local Bar = Instance.new("TextButton")
                 Bar.Name = "Bar"
-                Bar.Position = UDim2.new(0, 12, 0, 28)
-                Bar.Size = UDim2.new(1, -24, 0, 8)
+                Bar.Position = UDim2.new(0, 12, 0, 27)
+                Bar.Size = UDim2.new(1, -24, 0, 6)
                 Bar.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
                 Bar.BorderSizePixel = 0
                 Bar.AutoButtonColor = false
@@ -1223,7 +1223,7 @@ function SaturnLib:CreateWindow(config)
 
                 local Item = Instance.new("Frame")
                 Item.Name = name .. "_Dropdown"
-                Item.Size = UDim2.new(1, 0, 0, 36)
+                Item.Size = UDim2.new(1, 0, 0, 40)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
                 Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
@@ -1242,7 +1242,7 @@ function SaturnLib:CreateWindow(config)
                 ItemStroke.Parent = Item
 
                 local HeaderBtn = Instance.new("TextButton")
-                HeaderBtn.Size = UDim2.new(1, 0, 0, 36)
+                HeaderBtn.Size = UDim2.new(1, 0, 0, 40)
                 HeaderBtn.BackgroundTransparency = 1
                 HeaderBtn.Text = ""
                 HeaderBtn.Parent = Item
@@ -1282,7 +1282,7 @@ function SaturnLib:CreateWindow(config)
                 Arrow.Parent = HeaderBtn
 
                 local OptHolder = Instance.new("Frame")
-                OptHolder.Position = UDim2.new(0, 8, 0, 36)
+                OptHolder.Position = UDim2.new(0, 8, 0, 40)
                 OptHolder.Size = UDim2.new(1, -16, 0, #options * 28)
                 OptHolder.BackgroundTransparency = 1
                 OptHolder.Parent = Item
@@ -1327,7 +1327,7 @@ function SaturnLib:CreateWindow(config)
 
                 local function toggleOpen()
                     isOpen = not isOpen
-                    local targetH = isOpen and (36 + (#options * 28) + 8) or 36
+                    local targetH = isOpen and (40 + (#options * 28) + 8) or 40
                     Arrow.Text = isOpen and "▴" or "▾"
                     TweenService:Create(Item, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                         Size = UDim2.new(1, 0, 0, targetH)
@@ -1354,7 +1354,7 @@ function SaturnLib:CreateWindow(config)
                         OptHolder.Size = UDim2.new(1, -16, 0, #options * 28)
                         rebuild()
                         if isOpen then
-                            Item.Size = UDim2.new(1, 0, 0, 36 + (#options * 28) + 8)
+                            Item.Size = UDim2.new(1, 0, 0, 40 + (#options * 28) + 8)
                             updateSecSize()
                         end
                     end
@@ -1375,7 +1375,7 @@ function SaturnLib:CreateWindow(config)
 
                 local Item = Instance.new("Frame")
                 Item.Name = name .. "_Keybind"
-                Item.Size = UDim2.new(1, 0, 0, 38)
+                Item.Size = UDim2.new(1, 0, 0, 40)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
                 Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
@@ -1460,7 +1460,7 @@ function SaturnLib:CreateWindow(config)
 
                 local Item = Instance.new("TextButton")
                 Item.Name = name .. "_Button"
-                Item.Size = UDim2.new(1, 0, 0, 38)
+                Item.Size = UDim2.new(1, 0, 0, 40)
                 Item.BackgroundColor3 = SaturnLib.Themes.ElementHover
                 Item.BackgroundTransparency = 1
                 Item.BorderSizePixel = 0
@@ -1524,7 +1524,7 @@ function SaturnLib:CreateWindow(config)
 
                 local Item = Instance.new("Frame")
                 Item.Name = name .. "_ColorPicker"
-                Item.Size = UDim2.new(1, 0, 0, 38)
+                Item.Size = UDim2.new(1, 0, 0, 40)
                 Item.BackgroundColor3 = SaturnLib.Themes.Element
                 Item.BackgroundTransparency = SaturnLib.Themes.ElementTransparency
                 Item.BorderSizePixel = 0
