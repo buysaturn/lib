@@ -382,6 +382,8 @@ function SaturnLib:CreateWindow(config)
     TabContainer.Size = UDim2.new(1, -16, 1, -100)
     TabContainer.BackgroundTransparency = 1
     TabContainer.ScrollBarThickness = 0
+    -- No clipping: the scroll frame edge was cutting thin side strokes off the tabs
+    TabContainer.ClipsDescendants = false
     TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
     TabContainer.Parent = Sidebar
 
@@ -798,9 +800,9 @@ function SaturnLib:CreateWindow(config)
 
         local TabStroke = Instance.new("UIStroke")
         TabStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        TabStroke.Color = SaturnLib.Themes.Border
+        TabStroke.Color = Color3.fromRGB(255, 255, 255)
         TabStroke.Transparency = 1
-        TabStroke.Thickness = 1
+        TabStroke.Thickness = 1.5
         TabStroke.Parent = TabBtn
 
         local TabIndicator = Instance.new("Frame")
@@ -891,7 +893,7 @@ function SaturnLib:CreateWindow(config)
             }):Play()
             if TabStroke then
                 TweenService:Create(TabStroke, TweenInfo.new(0.15), {
-                    Transparency = 0.86
+                    Transparency = 0.8
                 }):Play()
             end
             TweenService:Create(TabLabel, TweenInfo.new(0.15), {
