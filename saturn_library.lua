@@ -58,6 +58,26 @@ local function getFont(weight)
     end
 end
 
+-- Typography: Montserrat via FontFace (falls back to the enum font above)
+local FONT_FAMILY = "rbxasset://fonts/families/Montserrat.json"
+
+local function applyFont(obj, weight)
+    local weightEnum = Enum.FontWeight.Regular
+    if weight == "Bold" then
+        weightEnum = Enum.FontWeight.Bold
+    elseif weight == "Medium" then
+        weightEnum = Enum.FontWeight.Medium
+    elseif weight == "SemiBold" then
+        weightEnum = Enum.FontWeight.SemiBold
+    end
+    local ok = pcall(function()
+        obj.FontFace = Font.new(FONT_FAMILY, weightEnum)
+    end)
+    if not ok then
+        obj.Font = getFont(weight)
+    end
+end
+
 -- Safe GUI container
 local function getGuiParent()
     if gethui then
@@ -199,7 +219,7 @@ function SaturnLib:Notify(opts)
     tLabel.Position = UDim2.new(0, 14, 0, 10)
     tLabel.Size = UDim2.new(1, -28, 0, 16)
     tLabel.BackgroundTransparency = 1
-    tLabel.Font = getFont("Bold")
+    applyFont(tLabel, "Bold")
     tLabel.Text = title
     tLabel.TextColor3 = SaturnLib.Themes.Text
     tLabel.TextSize = 13
@@ -210,7 +230,7 @@ function SaturnLib:Notify(opts)
     cLabel.Position = UDim2.new(0, 14, 0, 28)
     cLabel.Size = UDim2.new(1, -28, 0, 22)
     cLabel.BackgroundTransparency = 1
-    cLabel.Font = getFont("Medium")
+    applyFont(cLabel, "Medium")
     cLabel.Text = content
     cLabel.TextColor3 = SaturnLib.Themes.TextDim
     cLabel.TextSize = 12
@@ -356,7 +376,7 @@ function SaturnLib:CreateWindow(config)
     Title.Position = UDim2.new(0, 46, 0, 12)
     Title.Size = UDim2.new(1, -50, 0, 18)
     Title.BackgroundTransparency = 1
-    Title.Font = getFont("Bold")
+    applyFont(Title, "Bold")
     Title.Text = TitleText
     Title.TextColor3 = SaturnLib.Themes.Text
     Title.TextSize = 14
@@ -368,7 +388,7 @@ function SaturnLib:CreateWindow(config)
     SubTitle.Position = UDim2.new(0, 46, 0, 28)
     SubTitle.Size = UDim2.new(1, -50, 0, 14)
     SubTitle.BackgroundTransparency = 1
-    SubTitle.Font = getFont("Medium")
+    applyFont(SubTitle, "Medium")
     SubTitle.Text = SubTitleText
     SubTitle.TextColor3 = SaturnLib.Themes.TextDim
     SubTitle.TextSize = 10
@@ -451,7 +471,7 @@ function SaturnLib:CreateWindow(config)
     BadgeText.Position = UDim2.new(0, 22, 0, 0)
     BadgeText.Size = UDim2.new(1, -26, 1, 0)
     BadgeText.BackgroundTransparency = 1
-    BadgeText.Font = getFont("Medium")
+    applyFont(BadgeText, "Medium")
     BadgeText.Text = config.BadgeText or "Active Session"
     BadgeText.TextColor3 = SaturnLib.Themes.TextDim
     BadgeText.TextSize = 11
@@ -477,7 +497,7 @@ function SaturnLib:CreateWindow(config)
     CurrentTabLabel.Position = UDim2.new(0, 20, 0, 0)
     CurrentTabLabel.Size = UDim2.new(0, 250, 1, 0)
     CurrentTabLabel.BackgroundTransparency = 1
-    CurrentTabLabel.Font = getFont("Bold")
+    applyFont(CurrentTabLabel, "Bold")
     CurrentTabLabel.Text = "MAIN"
     CurrentTabLabel.TextColor3 = SaturnLib.Themes.Text
     CurrentTabLabel.TextSize = 14
@@ -492,7 +512,7 @@ function SaturnLib:CreateWindow(config)
     CloseBtn.Size = UDim2.new(0, 24, 0, 24)
     CloseBtn.BackgroundTransparency = 1
     CloseBtn.BorderSizePixel = 0
-    CloseBtn.Font = getFont("Bold")
+    applyFont(CloseBtn, "Bold")
     CloseBtn.Text = "X"
     CloseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
     CloseBtn.TextSize = 13
@@ -505,11 +525,8 @@ function SaturnLib:CreateWindow(config)
     CloseBtn.MouseLeave:Connect(function()
         CloseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
     end)
-    CloseBtn.MouseButton1Click:Connect(function()
-        SaturnLib:Toggle(false)
-    end)
 
-    -- Minimize Button (collapses the window into a small square)
+    -- Minimize Button (collapses the window into the dynamic island)
     local CollapseBtn = Instance.new("TextButton")
     CollapseBtn.Name = "CollapseBtn"
     CollapseBtn.AnchorPoint = Vector2.new(1, 0.5)
@@ -517,7 +534,7 @@ function SaturnLib:CreateWindow(config)
     CollapseBtn.Size = UDim2.new(0, 24, 0, 24)
     CollapseBtn.BackgroundTransparency = 1
     CollapseBtn.BorderSizePixel = 0
-    CollapseBtn.Font = getFont("Bold")
+    applyFont(CollapseBtn, "Bold")
     CollapseBtn.Text = "−"
     CollapseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
     CollapseBtn.TextSize = 16
@@ -539,21 +556,78 @@ function SaturnLib:CreateWindow(config)
     ContentContainer.BackgroundTransparency = 1
     ContentContainer.Parent = Body
 
-    -- Saturn logo shown inside the minimized square
-    local CollapsedIcon = Instance.new("ImageLabel")
-    CollapsedIcon.Name = "CollapsedIcon"
-    CollapsedIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-    CollapsedIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
-    CollapsedIcon.Size = UDim2.new(0, 26, 0, 26)
-    CollapsedIcon.BackgroundTransparency = 1
-    CollapsedIcon.Image = Logo.Image
-    CollapsedIcon.ScaleType = Enum.ScaleType.Fit
-    CollapsedIcon.ImageTransparency = 1
-    CollapsedIcon.Visible = false
-    CollapsedIcon.ZIndex = 3
-    CollapsedIcon.Parent = Main
+    -- Dynamic Island (minimized state): icon + "Saturn" + live FPS
+    local ISLAND_W = 190
+    local ISLAND_H = 42
 
-    -- Click / drag surface for the minimized square
+    local Island = Instance.new("Frame")
+    Island.Name = "Island"
+    Island.Size = UDim2.new(1, 0, 1, 0)
+    Island.BackgroundTransparency = 1
+    Island.BorderSizePixel = 0
+    Island.ClipsDescendants = true
+    Island.Visible = false
+    Island.ZIndex = 3
+    Island.Parent = Main
+
+    local IslandIcon = Instance.new("ImageLabel")
+    IslandIcon.Name = "Icon"
+    IslandIcon.AnchorPoint = Vector2.new(0, 0.5)
+    IslandIcon.Position = UDim2.new(0, 13, 0.5, 0)
+    IslandIcon.Size = UDim2.new(0, 22, 0, 22)
+    IslandIcon.BackgroundTransparency = 1
+    IslandIcon.Image = Logo.Image
+    IslandIcon.ScaleType = Enum.ScaleType.Fit
+    IslandIcon.ImageTransparency = 1
+    IslandIcon.ZIndex = 3
+    IslandIcon.Parent = Island
+
+    local IslandTitle = Instance.new("TextLabel")
+    IslandTitle.Name = "Title"
+    IslandTitle.Position = UDim2.new(0, 43, 0, 0)
+    IslandTitle.Size = UDim2.new(0, 80, 1, 0)
+    IslandTitle.BackgroundTransparency = 1
+    applyFont(IslandTitle, "Bold")
+    IslandTitle.Text = TitleText
+    IslandTitle.TextColor3 = SaturnLib.Themes.Text
+    IslandTitle.TextSize = 13
+    IslandTitle.TextXAlignment = Enum.TextXAlignment.Left
+    IslandTitle.TextTransparency = 1
+    IslandTitle.ZIndex = 3
+    IslandTitle.Parent = Island
+
+    local IslandFps = Instance.new("TextLabel")
+    IslandFps.Name = "Fps"
+    IslandFps.AnchorPoint = Vector2.new(1, 0.5)
+    IslandFps.Position = UDim2.new(1, -15, 0.5, 0)
+    IslandFps.Size = UDim2.new(0, 64, 0, 16)
+    IslandFps.BackgroundTransparency = 1
+    applyFont(IslandFps, "Medium")
+    IslandFps.Text = "60 FPS"
+    IslandFps.TextColor3 = SaturnLib.Themes.TextDim
+    IslandFps.TextSize = 11
+    IslandFps.TextXAlignment = Enum.TextXAlignment.Right
+    IslandFps.TextTransparency = 1
+    IslandFps.ZIndex = 3
+    IslandFps.Parent = Island
+
+    -- Live FPS counter (updates every 0.25s)
+    local fpsAccum = 0
+    local fpsFrames = 0
+    RunService.RenderStepped:Connect(function(dt)
+        fpsAccum = fpsAccum + dt
+        fpsFrames = fpsFrames + 1
+        if fpsAccum >= 0.25 then
+            local fps = math.floor(fpsFrames / fpsAccum + 0.5)
+            fpsAccum = 0
+            fpsFrames = 0
+            if IslandFps and IslandFps.Parent then
+                IslandFps.Text = tostring(fps) .. " FPS"
+            end
+        end
+    end)
+
+    -- Click / drag surface for the island
     local CollapsedHit = Instance.new("TextButton")
     CollapsedHit.Name = "CollapsedHit"
     CollapsedHit.Size = UDim2.new(1, 0, 1, 0)
@@ -567,8 +641,6 @@ function SaturnLib:CreateWindow(config)
 
     local CollapsedDrag = makeDraggable(CollapsedHit, Main)
 
-    local COLLAPSED_SIZE = 48
-    local COLLAPSED_RADIUS = 12
     local Collapsed = false
     local Transitioning = false
 
@@ -593,6 +665,13 @@ function SaturnLib:CreateWindow(config)
         end
     end
 
+    local function islandFade(target, duration)
+        local info = TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+        TweenService:Create(IslandIcon, info, { ImageTransparency = target }):Play()
+        TweenService:Create(IslandTitle, info, { TextTransparency = target }):Play()
+        TweenService:Create(IslandFps, info, { TextTransparency = target }):Play()
+    end
+
     local function collapseWindow()
         if Collapsed or Transitioning then
             return
@@ -602,26 +681,24 @@ function SaturnLib:CreateWindow(config)
 
         Body.Visible = true
         CollapsedHit.Visible = false
-        CollapsedIcon.Visible = true
+        Island.Visible = true
         fadeBody(1, 0.16)
         setBlur(0, 0.28)
 
-        TweenService:Create(CollapsedIcon, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            ImageTransparency = 0
-        }):Play()
-
-        -- Rounded square icon
+        -- Flatten the window into a pill-shaped island
         TweenService:Create(MainCorner, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-            CornerRadius = UDim.new(0, COLLAPSED_RADIUS)
+            CornerRadius = UDim.new(1, 0)
         }):Play()
 
         local tween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, COLLAPSED_SIZE, 0, COLLAPSED_SIZE)
+            Size = UDim2.new(0, ISLAND_W, 0, ISLAND_H),
+            BackgroundTransparency = 0.05
         })
         tween:Play()
         tween.Completed:Connect(function()
             Body.Visible = false
             CollapsedHit.Visible = true
+            islandFade(0, 0.16)
             Transitioning = false
         end)
     end
@@ -635,28 +712,27 @@ function SaturnLib:CreateWindow(config)
 
         Body.Visible = true
         CollapsedHit.Visible = false
+        islandFade(1, 0.1)
         fadeBody(0, 0.22)
         setBlur(BLUR_STRENGTH, 0.3)
-
-        TweenService:Create(CollapsedIcon, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-            ImageTransparency = 1
-        }):Play()
 
         TweenService:Create(MainCorner, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
             CornerRadius = UDim.new(0, 16)
         }):Play()
 
         local tween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, SizeX, 0, SizeY)
+            Size = UDim2.new(0, SizeX, 0, SizeY),
+            BackgroundTransparency = SaturnLib.Themes.BackgroundTransparency
         })
         tween:Play()
         tween.Completed:Connect(function()
-            CollapsedIcon.Visible = false
+            Island.Visible = false
             Transitioning = false
         end)
     end
 
     CollapseBtn.MouseButton1Click:Connect(collapseWindow)
+    CloseBtn.MouseButton1Click:Connect(collapseWindow)
 
     CollapsedHit.MouseButton1Click:Connect(function()
         if CollapsedDrag.WasDragged() then
@@ -666,7 +742,7 @@ function SaturnLib:CreateWindow(config)
     end)
 
     -- Toggle Hotkey handling (Right Shift always works, plus any custom ToggleKey):
-    -- expanded -> minimizes into the rounded Saturn square, square -> expands back
+    -- expanded -> flies into the dynamic island, island -> expands back
     UserInputService.InputBegan:Connect(function(input, processed)
         if processed then
             return
@@ -714,7 +790,7 @@ function SaturnLib:CreateWindow(config)
             end
         else
             if Collapsed then
-                -- Keep the minimized square ready for the next toggle
+                -- Keep the island ready for the next toggle
                 Main.Visible = false
                 setBlur(0, 0.2)
                 return
@@ -762,7 +838,7 @@ function SaturnLib:CreateWindow(config)
         end
     end
 
-    -- Minimize to the Saturn square / restore
+    -- Minimize to the dynamic island / restore
     function WindowObj:Collapse()
         collapseWindow()
     end
@@ -817,7 +893,7 @@ function SaturnLib:CreateWindow(config)
         TabLabel.Position = UDim2.new(0, 16, 0, 0)
         TabLabel.Size = UDim2.new(1, -20, 1, 0)
         TabLabel.BackgroundTransparency = 1
-        TabLabel.Font = getFont("Medium")
+        applyFont(TabLabel, "Medium")
         TabLabel.Text = tabName:upper()
         TabLabel.TextColor3 = SaturnLib.Themes.TextDim
         TabLabel.TextSize = 12
@@ -926,7 +1002,7 @@ function SaturnLib:CreateWindow(config)
             SecTitleLabel.Position = UDim2.new(0, 0, 0, 0)
             SecTitleLabel.Size = UDim2.new(1, 0, 1, 0)
             SecTitleLabel.BackgroundTransparency = 1
-            SecTitleLabel.Font = getFont("Bold")
+            applyFont(SecTitleLabel, "Bold")
             SecTitleLabel.Text = (secTitle or "SECTION"):upper()
             SecTitleLabel.TextColor3 = SaturnLib.Themes.AccentDim
             SecTitleLabel.TextSize = 12
@@ -1014,7 +1090,7 @@ function SaturnLib:CreateWindow(config)
                 Label.Position = UDim2.new(0, 12, 0, 0)
                 Label.Size = UDim2.new(1, -60, 1, 0)
                 Label.BackgroundTransparency = 1
-                Label.Font = getFont("Medium")
+                applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
                 Label.TextSize = 12
@@ -1112,7 +1188,7 @@ function SaturnLib:CreateWindow(config)
                 Label.Position = UDim2.new(0, 12, 0, 6)
                 Label.Size = UDim2.new(1, -70, 0, 16)
                 Label.BackgroundTransparency = 1
-                Label.Font = getFont("Medium")
+                applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
                 Label.TextSize = 12
@@ -1124,7 +1200,7 @@ function SaturnLib:CreateWindow(config)
                 ValueLabel.Position = UDim2.new(1, -12, 0, 6)
                 ValueLabel.Size = UDim2.new(0, 60, 0, 16)
                 ValueLabel.BackgroundTransparency = 1
-                ValueLabel.Font = getFont("Bold")
+                applyFont(ValueLabel, "Bold")
                 ValueLabel.Text = string.format("%." .. tostring(decimals) .. "f%s", value, suffix)
                 ValueLabel.TextColor3 = SaturnLib.Themes.AccentDim
                 ValueLabel.TextSize = 12
@@ -1251,7 +1327,7 @@ function SaturnLib:CreateWindow(config)
                 Label.Position = UDim2.new(0, 12, 0, 0)
                 Label.Size = UDim2.new(0.5, -12, 1, 0)
                 Label.BackgroundTransparency = 1
-                Label.Font = getFont("Medium")
+                applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
                 Label.TextSize = 12
@@ -1263,7 +1339,7 @@ function SaturnLib:CreateWindow(config)
                 SelLabel.Position = UDim2.new(1, -30, 0, 0)
                 SelLabel.Size = UDim2.new(0.5, -20, 1, 0)
                 SelLabel.BackgroundTransparency = 1
-                SelLabel.Font = getFont("Bold")
+                applyFont(SelLabel, "Bold")
                 SelLabel.Text = tostring(selected)
                 SelLabel.TextColor3 = SaturnLib.Themes.TextDim
                 SelLabel.TextSize = 12
@@ -1302,7 +1378,7 @@ function SaturnLib:CreateWindow(config)
                         oBtn.BackgroundColor3 = (opt == selected) and Color3.fromRGB(35, 35, 48) or Color3.fromRGB(20, 20, 28)
                         oBtn.BackgroundTransparency = (opt == selected) and 0.55 or 1
                         oBtn.BorderSizePixel = 0
-                        oBtn.Font = getFont("Medium")
+                        applyFont(oBtn, "Medium")
                         oBtn.Text = "  " .. tostring(opt)
                         oBtn.TextColor3 = (opt == selected) and SaturnLib.Themes.Accent or SaturnLib.Themes.TextDim
                         oBtn.TextSize = 11
@@ -1396,7 +1472,7 @@ function SaturnLib:CreateWindow(config)
                 Label.Position = UDim2.new(0, 12, 0, 0)
                 Label.Size = UDim2.new(1, -100, 1, 0)
                 Label.BackgroundTransparency = 1
-                Label.Font = getFont("Medium")
+                applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
                 Label.TextSize = 12
@@ -1409,7 +1485,7 @@ function SaturnLib:CreateWindow(config)
                 KeyBtn.Size = UDim2.new(0, 80, 0, 22)
                 KeyBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
                 KeyBtn.BorderSizePixel = 0
-                KeyBtn.Font = getFont("Bold")
+                applyFont(KeyBtn, "Bold")
                 KeyBtn.Text = key.Name
                 KeyBtn.TextColor3 = SaturnLib.Themes.Text
                 KeyBtn.TextSize = 11
@@ -1483,7 +1559,7 @@ function SaturnLib:CreateWindow(config)
                 Label.Position = UDim2.new(0, 12, 0, 0)
                 Label.Size = UDim2.new(1, -24, 1, 0)
                 Label.BackgroundTransparency = 1
-                Label.Font = getFont("Medium")
+                applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
                 Label.TextSize = 12
@@ -1545,7 +1621,7 @@ function SaturnLib:CreateWindow(config)
                 Label.Position = UDim2.new(0, 12, 0, 0)
                 Label.Size = UDim2.new(1, -60, 1, 0)
                 Label.BackgroundTransparency = 1
-                Label.Font = getFont("Medium")
+                applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
                 Label.TextSize = 12
@@ -1631,7 +1707,7 @@ function SaturnLib:CreateWindow(config)
                 Label.Position = UDim2.new(0, 12, 0, 0)
                 Label.Size = UDim2.new(0.4, -12, 1, 0)
                 Label.BackgroundTransparency = 1
-                Label.Font = getFont("Medium")
+                applyFont(Label, "Medium")
                 Label.Text = name
                 Label.TextColor3 = SaturnLib.Themes.Text
                 Label.TextSize = 12
@@ -1644,7 +1720,7 @@ function SaturnLib:CreateWindow(config)
                 Input.Size = UDim2.new(0.6, 0, 0, 24)
                 Input.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
                 Input.BorderSizePixel = 0
-                Input.Font = getFont("Medium")
+                applyFont(Input, "Medium")
                 Input.Text = default
                 Input.PlaceholderText = placeholder
                 Input.PlaceholderColor3 = SaturnLib.Themes.TextDim
