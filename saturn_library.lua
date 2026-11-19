@@ -944,38 +944,36 @@ function SaturnLib:CreateWindow(config)
 
             local SecContainer = Instance.new("Frame")
             SecContainer.Name = "Container"
-            SecContainer.Position = UDim2.new(0, 0, 0, 23)
+            SecContainer.Position = UDim2.new(0, 0, 0, 27)
             SecContainer.Size = UDim2.new(1, 0, 0, 0)
             SecContainer.BackgroundTransparency = 1
             SecContainer.Parent = SectionFrame
 
             local SecLayout = Instance.new("UIListLayout")
             SecLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            SecLayout.Padding = UDim.new(0, 0)
+            SecLayout.Padding = UDim.new(0, 6)
             SecLayout.Parent = SecContainer
 
             local function updateSecSize()
                 local contentH = SecLayout.AbsoluteContentSize.Y
-                SectionFrame.Size = UDim2.new(1, 0, 0, 23 + contentH)
+                SectionFrame.Size = UDim2.new(1, 0, 0, 27 + contentH)
                 SecContainer.Size = UDim2.new(1, 0, 0, contentH)
             end
 
             SecLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateSecSize)
 
-            -- Flat row: no card background, thin divider under each setting
+            -- Row styling: one full-width rounded block per setting (same look as the active tab)
             local function styleRow(Item)
-                Item.BackgroundTransparency = 1
+                Item.BackgroundColor3 = SaturnLib.Themes.Element
+                Item.BackgroundTransparency = 0.40
+                Item.BorderSizePixel = 0
                 local stroke = Item:FindFirstChildOfClass("UIStroke")
                 if stroke then
-                    stroke.Transparency = 1
+                    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                    stroke.Color = SaturnLib.Themes.Border
+                    stroke.Transparency = 0.90
+                    stroke.Thickness = 1
                 end
-                local line = Instance.new("Frame")
-                line.Name = "Divider"
-                line.Size = UDim2.new(1, 0, 0, 1)
-                line.BackgroundColor3 = SaturnLib.Themes.Border
-                line.BackgroundTransparency = 0.90
-                line.BorderSizePixel = 0
-                line.Parent = SecContainer
             end
 
             local SecObj = {}
@@ -1494,13 +1492,13 @@ function SaturnLib:CreateWindow(config)
 
                 Item.MouseEnter:Connect(function()
                     TweenService:Create(Item, TweenInfo.new(0.15), {
-                        BackgroundTransparency = 0.95
+                        BackgroundTransparency = 0.30
                     }):Play()
                 end)
 
                 Item.MouseLeave:Connect(function()
                     TweenService:Create(Item, TweenInfo.new(0.15), {
-                        BackgroundTransparency = 1
+                        BackgroundTransparency = 0.40
                     }):Play()
                 end)
 
