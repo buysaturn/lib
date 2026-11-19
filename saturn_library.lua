@@ -274,6 +274,8 @@ function SaturnLib:CreateWindow(config)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "SaturnLibGui"
     ScreenGui.ResetOnSpawn = false
+    -- Measure from the real top of the screen (no hidden topbar inset pushing the island down)
+    ScreenGui.IgnoreGuiInset = true
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = getGuiParent()
 
@@ -559,7 +561,7 @@ function SaturnLib:CreateWindow(config)
     -- Dynamic Island (minimized state): fixed top-center pill
     local ISLAND_W = 190
     local ISLAND_H = 42
-    local ISLAND_MARGIN = 18
+    local ISLAND_MARGIN = 14
 
     local Island = Instance.new("Frame")
     Island.Name = "Island"
