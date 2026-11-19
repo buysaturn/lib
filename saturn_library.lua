@@ -244,7 +244,7 @@ function SaturnLib:CreateWindow(config)
     SaturnLib.ToggleKey = config.ToggleKey or Enum.KeyCode.RightShift
 
     -- Blur strength (two stacked passes ≈ double-loaded look)
-    local BLUR_STRENGTH = 36
+    local BLUR_STRENGTH = 48
 
     -- Clean old instances
     if CoreGui:FindFirstChild("SaturnLibGui") then
@@ -389,6 +389,23 @@ function SaturnLib:CreateWindow(config)
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
     TabLayout.Padding = UDim.new(0, 4)
     TabLayout.Parent = TabContainer
+
+    -- Spacers keep the first/last tab stroke away from the scroll frame's clip edge
+    local TabTopSpacer = Instance.new("Frame")
+    TabTopSpacer.Name = "TopSpacer"
+    TabTopSpacer.Size = UDim2.new(1, 0, 0, 4)
+    TabTopSpacer.BackgroundTransparency = 1
+    TabTopSpacer.BorderSizePixel = 0
+    TabTopSpacer.LayoutOrder = -1
+    TabTopSpacer.Parent = TabContainer
+
+    local TabBottomSpacer = Instance.new("Frame")
+    TabBottomSpacer.Name = "BottomSpacer"
+    TabBottomSpacer.Size = UDim2.new(1, 0, 0, 8)
+    TabBottomSpacer.BackgroundTransparency = 1
+    TabBottomSpacer.BorderSizePixel = 0
+    TabBottomSpacer.LayoutOrder = 99999
+    TabBottomSpacer.Parent = TabContainer
 
     TabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         TabContainer.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y)
@@ -868,7 +885,7 @@ function SaturnLib:CreateWindow(config)
             }):Play()
             if TabStroke then
                 TweenService:Create(TabStroke, TweenInfo.new(0.15), {
-                    Transparency = 0.92
+                    Transparency = 0.86
                 }):Play()
             end
             TweenService:Create(TabLabel, TweenInfo.new(0.15), {
