@@ -97,10 +97,12 @@ end
 local function makeDraggable(topbar, frame)
     local dragging = false
     local dragInput, dragStart, startPos
+    local moved = 0
 
     topbar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
+            moved = 0
             dragStart = input.Position
             startPos = frame.Position
 
@@ -121,6 +123,7 @@ local function makeDraggable(topbar, frame)
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
+            moved = math.max(moved, math.abs(delta.X) + math.abs(delta.Y))
             TweenService:Create(frame, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                 Position = UDim2.new(
                     startPos.X.Scale,
@@ -131,6 +134,13 @@ local function makeDraggable(topbar, frame)
             }):Play()
         end
     end)
+
+    -- Lets click handlers tell a drag apart from a plain click
+    return {
+        WasDragged = function()
+            return moved > 4
+        end
+    }
 end
 
 -- Notification System
@@ -253,7 +263,8 @@ function SaturnLib:CreateWindow(config)
     Main.BackgroundColor3 = SaturnLib.Themes.Background
     Main.BackgroundTransparency = SaturnLib.Themes.BackgroundTransparency
     Main.BorderSizePixel = 0
-    Main.ClipsDescendants = false
+    -- Clip children so nothing (scrollbars, section edges) bleeds through the rounded corners
+    Main.ClipsDescendants = true
     Main.Parent = ScreenGui
 
     local MainCorner = Instance.new("UICorner")
@@ -292,19 +303,29 @@ function SaturnLib:CreateWindow(config)
         Size = 24
     }):Play()
 
+    -- Content Body (faded as a group when minimizing; keeps children from bleeding on collapse)
+    local Body = Instance.new("CanvasGroup")
+    Body.Name = "Body"
+    Body.Size = UDim2.new(1, 0, 1, 0)
+    Body.BackgroundTransparency = 1
+    Body.BorderSizePixel = 0
+    Body.GroupTransparency = 0
+    Body.Parent = Main
+
     -- Left Sidebar (Navigation) — Transparent to let Main's rounded corners & stroke render seamlessly
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, 160, 1, 0)
     Sidebar.BackgroundTransparency = 1
     Sidebar.BorderSizePixel = 0
-    Sidebar.Parent = Main
+    Sidebar.Parent = Body
 
     local SidebarBorder = Instance.new("Frame")
     SidebarBorder.Name = "SidebarBorder"
     SidebarBorder.AnchorPoint = Vector2.new(1, 0)
-    SidebarBorder.Position = UDim2.new(1, 0, 0, 0)
-    SidebarBorder.Size = UDim2.new(0, 1, 1, 0)
+    -- Inset so the divider never cuts through the rounded top/bottom corners
+    SidebarBorder.Position = UDim2.new(1, 0, 0, 16)
+    SidebarBorder.Size = UDim2.new(0, 1, 1, -32)
     SidebarBorder.BackgroundColor3 = SaturnLib.Themes.Border
     SidebarBorder.BackgroundTransparency = 0.92
     SidebarBorder.BorderSizePixel = 0
@@ -421,7 +442,7 @@ function SaturnLib:CreateWindow(config)
     TopBar.Position = UDim2.new(0, 160, 0, 0)
     TopBar.Size = UDim2.new(1, -160, 0, 44)
     TopBar.BackgroundTransparency = 1
-    TopBar.Parent = Main
+    TopBar.Parent = Body
 
     makeDraggable(TopBar, Main)
     makeDraggable(Brand, Main)
@@ -463,13 +484,160 @@ function SaturnLib:CreateWindow(config)
         SaturnLib:Toggle(false)
     end)
 
+    -- Minimize Button (collapses the window into a small square)
+    local CollapseBtn = Instance.new("TextButton")
+    CollapseBtn.Name = "CollapseBtn"
+    CollapseBtn.AnchorPoint = Vector2.new(1, 0.5)
+    CollapseBtn.Position = UDim2.new(1, -50, 0.5, 0)
+    CollapseBtn.Size = UDim2.new(0, 26, 0, 26)
+    CollapseBtn.BackgroundTransparency = 1
+    CollapseBtn.BorderSizePixel = 0
+    CollapseBtn.Font = getFont("Bold")
+    CollapseBtn.Text = "−"
+    CollapseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
+    CollapseBtn.TextSize = 18
+    CollapseBtn.AutoButtonColor = false
+    CollapseBtn.Parent = TopBar
+
+    CollapseBtn.MouseEnter:Connect(function()
+        CollapseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+    CollapseBtn.MouseLeave:Connect(function()
+        CollapseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
+    end)
+
     -- Content Area on Right Side
     local ContentContainer = Instance.new("Frame")
     ContentContainer.Name = "ContentContainer"
     ContentContainer.Position = UDim2.new(0, 160, 0, 44)
     ContentContainer.Size = UDim2.new(1, -160, 1, -44)
     ContentContainer.BackgroundTransparency = 1
-    ContentContainer.Parent = Main
+    ContentContainer.Parent = Body
+
+    -- Saturn logo shown inside the minimized square
+    local CollapsedIcon = Instance.new("ImageLabel")
+    CollapsedIcon.Name = "CollapsedIcon"
+    CollapsedIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+    CollapsedIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+    CollapsedIcon.Size = UDim2.new(0, 26, 0, 26)
+    CollapsedIcon.BackgroundTransparency = 1
+    CollapsedIcon.Image = Logo.Image
+    CollapsedIcon.ScaleType = Enum.ScaleType.Fit
+    CollapsedIcon.ImageTransparency = 1
+    CollapsedIcon.Visible = false
+    CollapsedIcon.ZIndex = 3
+    CollapsedIcon.Parent = Main
+
+    -- Click / drag surface for the minimized square
+    local CollapsedHit = Instance.new("TextButton")
+    CollapsedHit.Name = "CollapsedHit"
+    CollapsedHit.Size = UDim2.new(1, 0, 1, 0)
+    CollapsedHit.BackgroundTransparency = 1
+    CollapsedHit.BorderSizePixel = 0
+    CollapsedHit.Text = ""
+    CollapsedHit.AutoButtonColor = false
+    CollapsedHit.Visible = false
+    CollapsedHit.ZIndex = 4
+    CollapsedHit.Parent = Main
+
+    local CollapsedDrag = makeDraggable(CollapsedHit, Main)
+
+    local COLLAPSED_SIZE = 48
+    local Collapsed = false
+    local Transitioning = false
+
+    local function fadeBody(target, duration)
+        if Body:IsA("CanvasGroup") then
+            TweenService:Create(Body, TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                GroupTransparency = target
+            }):Play()
+        end
+    end
+
+    local function setBlur(size, duration)
+        if Blur1 then
+            TweenService:Create(Blur1, TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = size
+            }):Play()
+        end
+        if Blur2 then
+            TweenService:Create(Blur2, TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = size
+            }):Play()
+        end
+    end
+
+    local function collapseWindow()
+        if Collapsed or Transitioning then
+            return
+        end
+        Collapsed = true
+        Transitioning = true
+
+        Body.Visible = true
+        CollapsedHit.Visible = false
+        CollapsedIcon.Visible = true
+        fadeBody(1, 0.16)
+        setBlur(0, 0.28)
+
+        TweenService:Create(CollapsedIcon, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            ImageTransparency = 0
+        }):Play()
+
+        -- Square with straight (zero-radius) corners
+        TweenService:Create(MainCorner, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            CornerRadius = UDim.new(0, 0)
+        }):Play()
+
+        local tween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, COLLAPSED_SIZE, 0, COLLAPSED_SIZE)
+        })
+        tween:Play()
+        tween.Completed:Connect(function()
+            Body.Visible = false
+            CollapsedHit.Visible = true
+            Transitioning = false
+        end)
+    end
+
+    local function expandWindow()
+        if not Collapsed or Transitioning then
+            return
+        end
+        Collapsed = false
+        Transitioning = true
+
+        Body.Visible = true
+        CollapsedHit.Visible = false
+        fadeBody(0, 0.22)
+        setBlur(24, 0.3)
+
+        TweenService:Create(CollapsedIcon, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            ImageTransparency = 1
+        }):Play()
+
+        TweenService:Create(MainCorner, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            CornerRadius = UDim.new(0, 16)
+        }):Play()
+
+        local tween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, SizeX, 0, SizeY)
+        })
+        tween:Play()
+        tween.Completed:Connect(function()
+            CollapsedIcon.Visible = false
+            Transitioning = false
+        end)
+    end
+
+    CollapseBtn.MouseButton1Click:Connect(collapseWindow)
+
+    CollapsedHit.MouseButton1Click:Connect(function()
+        if CollapsedDrag.WasDragged() then
+            return
+        end
+        expandWindow()
+    end)
 
     -- Toggle Hotkey handling
     UserInputService.InputBegan:Connect(function(input, processed)
@@ -487,10 +655,14 @@ function SaturnLib:CreateWindow(config)
 
         if SaturnLib.IsOpen then
             Main.Visible = true
-            TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, SizeX, 0, SizeY),
-                BackgroundTransparency = SaturnLib.Themes.BackgroundTransparency
-            }):Play()
+            if Collapsed then
+                expandWindow()
+            else
+                TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, SizeX, 0, SizeY),
+                    BackgroundTransparency = SaturnLib.Themes.BackgroundTransparency
+                }):Play()
+            end
             if Blur1 then
                 TweenService:Create(Blur1, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                     Size = 24
@@ -502,6 +674,12 @@ function SaturnLib:CreateWindow(config)
                 }):Play()
             end
         else
+            if Collapsed then
+                -- Keep the minimized square ready for the next toggle
+                Main.Visible = false
+                setBlur(0, 0.2)
+                return
+            end
             local t = TweenService:Create(Main, TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
                 Size = UDim2.new(0, SizeX, 0, 0),
                 BackgroundTransparency = 1
@@ -543,6 +721,15 @@ function SaturnLib:CreateWindow(config)
         if ScreenGui then
             ScreenGui:Destroy()
         end
+    end
+
+    -- Minimize to the Saturn square / restore
+    function WindowObj:Collapse()
+        collapseWindow()
+    end
+
+    function WindowObj:Expand()
+        expandWindow()
     end
 
     -- Create Tab
@@ -601,11 +788,12 @@ function SaturnLib:CreateWindow(config)
         -- Tab Page (Scrolling Frame inside ContentContainer)
         local TabPage = Instance.new("ScrollingFrame")
         TabPage.Name = tabName .. "_Page"
-        TabPage.Size = UDim2.new(1, 0, 1, 0)
+        -- Inset from the window edge so the scrollbar never crosses the rounded corners
+        TabPage.Size = UDim2.new(1, -6, 1, -8)
         TabPage.Position = UDim2.new(0, 0, 0, 0)
         TabPage.BackgroundTransparency = 1
         TabPage.BorderSizePixel = 0
-        TabPage.ScrollBarThickness = 2
+        TabPage.ScrollBarThickness = 3
         TabPage.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 75)
         TabPage.CanvasSize = UDim2.new(0, 0, 0, 0)
         TabPage.Visible = false
