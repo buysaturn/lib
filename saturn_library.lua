@@ -243,6 +243,9 @@ function SaturnLib:CreateWindow(config)
     local SizeY = config.SizeY or 420
     SaturnLib.ToggleKey = config.ToggleKey or Enum.KeyCode.RightShift
 
+    -- Blur strength (two stacked passes ≈ double-loaded look)
+    local BLUR_STRENGTH = 36
+
     -- Clean old instances
     if CoreGui:FindFirstChild("SaturnLibGui") then
         CoreGui.SaturnLibGui:Destroy()
@@ -297,10 +300,10 @@ function SaturnLib:CreateWindow(config)
     Blur2.Parent = Lighting
 
     TweenService:Create(Blur1, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Size = 24
+        Size = BLUR_STRENGTH
     }):Play()
     TweenService:Create(Blur2, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Size = 24
+        Size = BLUR_STRENGTH
     }):Play()
 
     -- Content Body (faded as a group when minimizing; keeps children from bleeding on collapse)
@@ -435,6 +438,9 @@ function SaturnLib:CreateWindow(config)
     BadgeText.TextSize = 11
     BadgeText.TextXAlignment = Enum.TextXAlignment.Left
     BadgeText.Parent = BottomBadge
+
+    -- The status badge doubles as a drag handle
+    makeDraggable(BottomBadge, Main)
 
     -- Top Bar on Right Side (Draggable & Control Buttons)
     local TopBar = Instance.new("Frame")
@@ -611,7 +617,7 @@ function SaturnLib:CreateWindow(config)
         Body.Visible = true
         CollapsedHit.Visible = false
         fadeBody(0, 0.22)
-        setBlur(24, 0.3)
+        setBlur(BLUR_STRENGTH, 0.3)
 
         TweenService:Create(CollapsedIcon, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
             ImageTransparency = 1
@@ -640,15 +646,23 @@ function SaturnLib:CreateWindow(config)
         expandWindow()
     end)
 
-    -- Toggle Hotkey handling (Right Shift by default):
-    -- expanded -> minimize into the rounded Saturn square, square -> expand back
+    -- Toggle Hotkey handling (Right Shift always works, plus any custom ToggleKey):
+    -- expanded -> minimizes into the rounded Saturn square, square -> expands back
     UserInputService.InputBegan:Connect(function(input, processed)
-        if not processed and input.KeyCode == SaturnLib.ToggleKey then
-            if not Main.Visible or Collapsed then
-                SaturnLib:Toggle(true)
-            else
-                collapseWindow()
-            end
+        if processed then
+            return
+        end
+        if input.UserInputType ~= Enum.UserInputType.Keyboard then
+            return
+        end
+        if input.KeyCode ~= Enum.KeyCode.RightShift and input.KeyCode ~= SaturnLib.ToggleKey then
+            return
+        end
+
+        if not Main.Visible or Collapsed then
+            SaturnLib:Toggle(true)
+        else
+            collapseWindow()
         end
     end)
 
@@ -671,12 +685,12 @@ function SaturnLib:CreateWindow(config)
             end
             if Blur1 then
                 TweenService:Create(Blur1, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                    Size = 24
+                    Size = BLUR_STRENGTH
                 }):Play()
             end
             if Blur2 then
                 TweenService:Create(Blur2, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                    Size = 24
+                    Size = BLUR_STRENGTH
                 }):Play()
             end
         else
