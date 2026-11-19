@@ -32,7 +32,7 @@ local SaturnLib = {
         AccentDim = Color3.fromRGB(200, 200, 210),
     },
     CurrentTab = nil,
-    ToggleKey = Enum.KeyCode.Insert,
+    ToggleKey = Enum.KeyCode.RightShift,
     IsOpen = true,
 }
 
@@ -241,7 +241,7 @@ function SaturnLib:CreateWindow(config)
     local SubTitleText = config.SubTitle or "v1.0"
     local SizeX = config.SizeX or 620
     local SizeY = config.SizeY or 420
-    SaturnLib.ToggleKey = config.ToggleKey or Enum.KeyCode.Insert
+    SaturnLib.ToggleKey = config.ToggleKey or Enum.KeyCode.RightShift
 
     -- Clean old instances
     if CoreGui:FindFirstChild("SaturnLibGui") then
@@ -463,8 +463,8 @@ function SaturnLib:CreateWindow(config)
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Name = "CloseBtn"
     CloseBtn.AnchorPoint = Vector2.new(1, 0.5)
-    CloseBtn.Position = UDim2.new(1, -16, 0.5, 0)
-    CloseBtn.Size = UDim2.new(0, 26, 0, 26)
+    CloseBtn.Position = UDim2.new(1, -14, 0.5, 0)
+    CloseBtn.Size = UDim2.new(0, 24, 0, 24)
     CloseBtn.BackgroundTransparency = 1
     CloseBtn.BorderSizePixel = 0
     CloseBtn.Font = getFont("Bold")
@@ -488,14 +488,14 @@ function SaturnLib:CreateWindow(config)
     local CollapseBtn = Instance.new("TextButton")
     CollapseBtn.Name = "CollapseBtn"
     CollapseBtn.AnchorPoint = Vector2.new(1, 0.5)
-    CollapseBtn.Position = UDim2.new(1, -50, 0.5, 0)
-    CollapseBtn.Size = UDim2.new(0, 26, 0, 26)
+    CollapseBtn.Position = UDim2.new(1, -38, 0.5, 0)
+    CollapseBtn.Size = UDim2.new(0, 24, 0, 24)
     CollapseBtn.BackgroundTransparency = 1
     CollapseBtn.BorderSizePixel = 0
     CollapseBtn.Font = getFont("Bold")
     CollapseBtn.Text = "−"
     CollapseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
-    CollapseBtn.TextSize = 18
+    CollapseBtn.TextSize = 16
     CollapseBtn.AutoButtonColor = false
     CollapseBtn.Parent = TopBar
 
@@ -543,6 +543,7 @@ function SaturnLib:CreateWindow(config)
     local CollapsedDrag = makeDraggable(CollapsedHit, Main)
 
     local COLLAPSED_SIZE = 48
+    local COLLAPSED_RADIUS = 12
     local Collapsed = false
     local Transitioning = false
 
@@ -584,9 +585,9 @@ function SaturnLib:CreateWindow(config)
             ImageTransparency = 0
         }):Play()
 
-        -- Square with straight (zero-radius) corners
+        -- Rounded square icon
         TweenService:Create(MainCorner, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-            CornerRadius = UDim.new(0, 0)
+            CornerRadius = UDim.new(0, COLLAPSED_RADIUS)
         }):Play()
 
         local tween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
@@ -639,10 +640,15 @@ function SaturnLib:CreateWindow(config)
         expandWindow()
     end)
 
-    -- Toggle Hotkey handling
+    -- Toggle Hotkey handling (Right Shift by default):
+    -- expanded -> minimize into the rounded Saturn square, square -> expand back
     UserInputService.InputBegan:Connect(function(input, processed)
         if not processed and input.KeyCode == SaturnLib.ToggleKey then
-            SaturnLib:Toggle()
+            if not Main.Visible or Collapsed then
+                SaturnLib:Toggle(true)
+            else
+                collapseWindow()
+            end
         end
     end)
 
