@@ -508,14 +508,14 @@ function SaturnLib:CreateWindow(config)
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Name = "CloseBtn"
     CloseBtn.AnchorPoint = Vector2.new(1, 0.5)
-    CloseBtn.Position = UDim2.new(1, -14, 0.5, 0)
+    CloseBtn.Position = UDim2.new(1, -16, 0.5, 0)
     CloseBtn.Size = UDim2.new(0, 24, 0, 24)
     CloseBtn.BackgroundTransparency = 1
     CloseBtn.BorderSizePixel = 0
     applyFont(CloseBtn, "Bold")
     CloseBtn.Text = "X"
     CloseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
-    CloseBtn.TextSize = 13
+    CloseBtn.TextSize = 14
     CloseBtn.AutoButtonColor = false
     CloseBtn.Parent = TopBar
 
@@ -530,14 +530,14 @@ function SaturnLib:CreateWindow(config)
     local CollapseBtn = Instance.new("TextButton")
     CollapseBtn.Name = "CollapseBtn"
     CollapseBtn.AnchorPoint = Vector2.new(1, 0.5)
-    CollapseBtn.Position = UDim2.new(1, -38, 0.5, 0)
+    CollapseBtn.Position = UDim2.new(1, -48, 0.5, 0)
     CollapseBtn.Size = UDim2.new(0, 24, 0, 24)
     CollapseBtn.BackgroundTransparency = 1
     CollapseBtn.BorderSizePixel = 0
     applyFont(CollapseBtn, "Bold")
     CollapseBtn.Text = "−"
     CollapseBtn.TextColor3 = Color3.fromRGB(140, 140, 150)
-    CollapseBtn.TextSize = 16
+    CollapseBtn.TextSize = 14
     CollapseBtn.AutoButtonColor = false
     CollapseBtn.Parent = TopBar
 
@@ -556,15 +556,15 @@ function SaturnLib:CreateWindow(config)
     ContentContainer.BackgroundTransparency = 1
     ContentContainer.Parent = Body
 
-    -- Dynamic Island (minimized state): fixed bottom-center pill
+    -- Dynamic Island (minimized state): fixed top-center pill
     local ISLAND_W = 190
     local ISLAND_H = 42
-    local ISLAND_MARGIN = 28
+    local ISLAND_MARGIN = 18
 
     local Island = Instance.new("Frame")
     Island.Name = "Island"
-    Island.AnchorPoint = Vector2.new(0.5, 1)
-    Island.Position = UDim2.new(0.5, 0, 1, -ISLAND_MARGIN)
+    Island.AnchorPoint = Vector2.new(0.5, 0)
+    Island.Position = UDim2.new(0.5, 0, 0, ISLAND_MARGIN)
     Island.Size = UDim2.new(0, ISLAND_W, 0, ISLAND_H)
     Island.BackgroundColor3 = SaturnLib.Themes.Background
     Island.BackgroundTransparency = 0.05
@@ -685,7 +685,7 @@ function SaturnLib:CreateWindow(config)
         end
     end
 
-    -- Island center in ScreenGui space (fixed bottom-center, independent of window drag)
+    -- Island center in ScreenGui space (fixed top-center, independent of window drag)
     local function getIslandCenter()
         local viewport = ScreenGui.AbsoluteSize
         if viewport.X <= 0 or viewport.Y <= 0 then
@@ -694,7 +694,7 @@ function SaturnLib:CreateWindow(config)
                 viewport = camera.ViewportSize
             end
         end
-        return UDim2.fromOffset(viewport.X / 2, viewport.Y - ISLAND_MARGIN - ISLAND_H / 2)
+        return UDim2.fromOffset(viewport.X / 2, ISLAND_MARGIN + ISLAND_H / 2)
     end
 
     local function collapseWindow()
@@ -715,7 +715,7 @@ function SaturnLib:CreateWindow(config)
             CornerRadius = UDim.new(1, 0)
         }):Play()
 
-        -- Window flies into the fixed island at the bottom center
+        -- Window flies into the fixed island at the top center
         local tween = TweenService:Create(Main, TweenInfo.new(0.32, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
             Position = getIslandCenter(),
             Size = UDim2.new(0, ISLAND_W, 0, ISLAND_H),
